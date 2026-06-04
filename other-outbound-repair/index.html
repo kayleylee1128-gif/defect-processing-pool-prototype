@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>其他出库 - 返修出库原型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #eef2f7;
+      color: #2f3b4a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 14px;
+    }
+    button, input, select { font: inherit; }
+    .topbar {
+      height: 44px;
+      background: #65a9e8;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(29, 78, 130, .18);
+    }
+    .brand {
+      width: 58px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #5aa2e4;
+    }
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f5a623;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .menu-toggle {
+      width: 62px;
+      text-align: center;
+      font-size: 22px;
+      opacity: .95;
+    }
+    .main-nav {
+      height: 44px;
+      display: flex;
+      align-items: stretch;
+    }
+    .main-nav a {
+      min-width: 108px;
+      padding: 0 18px;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .main-nav a.active {
+      background: rgba(255,255,255,.18);
+      font-weight: 600;
+    }
+    .top-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-right: 22px;
+    }
+    .top-icon { font-size: 20px; opacity: .95; }
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #233142;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      min-height: calc(100vh - 44px);
+    }
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid #dfe6ef;
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .side-icon {
+      width: 26px;
+      height: 26px;
+      color: #3d4652;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .content {
+      padding: 12px;
+      min-width: 1200px;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+      margin-bottom: 12px;
+      padding: 12px 22px 14px;
+    }
+    .biz-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      margin-bottom: 10px;
+    }
+    .biz-tab {
+      min-width: 86px;
+      height: 30px;
+      border: 1px solid #d7e3ef;
+      background: #fff;
+      color: #41546a;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .biz-tab.active {
+      background: #67a9e7;
+      border-color: #67a9e7;
+      color: #fff;
+    }
+    .biz-tab.repair {
+      position: relative;
+      min-width: 112px;
+      height: 42px;
+      margin-left: 2px;
+      border: 2px solid #ff4d3d;
+      color: #f0493a;
+      background: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    .state-tabs {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      height: 34px;
+      border-bottom: 1px solid #dce4ec;
+      margin-bottom: 12px;
+    }
+    .state-tab {
+      height: 34px;
+      color: #2f3b4a;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+    .state-tab.active {
+      color: #5a9fe2;
+      border-bottom-color: #5a9fe2;
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: 220px 120px 220px 160px 160px 160px 150px 150px minmax(220px, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .input, .select {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #dbe3ec;
+      border-radius: 4px;
+      background: #fff;
+      color: #374151;
+      padding: 0 10px;
+      outline: none;
+    }
+    .input::placeholder { color: #bcc7d3; }
+    .select { color: #8b98a8; }
+    .date-range {
+      display: grid;
+      grid-template-columns: 1fr 24px 1fr;
+      align-items: center;
+      border: 1px solid #dbe3ec;
+      border-radius: 4px;
+      height: 30px;
+      padding: 0 8px;
+      color: #9aa6b4;
+    }
+    .date-range input {
+      border: 0;
+      outline: 0;
+      min-width: 0;
+      color: #8b98a8;
+    }
+    .btn {
+      height: 30px;
+      border: 1px solid #d6e5f5;
+      border-radius: 4px;
+      padding: 0 16px;
+      background: #fff;
+      color: #4b87c8;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn.primary {
+      background: #65a9e8;
+      border-color: #65a9e8;
+      color: #fff;
+    }
+    .btn.gray {
+      background: #8b94a1;
+      border-color: #8b94a1;
+      color: #fff;
+    }
+    .btn.danger-light {
+      color: #ff5b5b;
+      background: #fff5f5;
+      border-color: #ffd5d5;
+    }
+    .table-panel {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+      padding: 22px 22px 16px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .table-wrap {
+      border: 1px solid #e1e6ec;
+      overflow: auto;
+      max-height: calc(100vh - 310px);
+    }
+    table {
+      width: 100%;
+      min-width: 1800px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td {
+      border-right: 1px solid #e5e9ef;
+      border-bottom: 1px solid #e5e9ef;
+      padding: 12px 10px;
+      vertical-align: top;
+      text-align: left;
+      line-height: 1.75;
+      color: #66717f;
+    }
+    th {
+      height: 42px;
+      padding: 9px 10px;
+      color: #2f3b4a;
+      font-weight: 600;
+      background: #fbfcfe;
+    }
+    tr:hover td { background: #fbfdff; }
+    .check-col { width: 42px; text-align: center; }
+    .order-col { width: 245px; }
+    .type-col { width: 155px; }
+    .warehouse-col { width: 210px; }
+    .sku-col { width: 210px; }
+    .logistics-col { width: 220px; }
+    .receiver-col { width: 260px; }
+    .other-col { width: 210px; }
+    .time-col { width: 250px; }
+    .action-col { width: 80px; text-align: center; }
+    .link {
+      color: #45a2ff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link-danger { color: #ff4d5f; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 4px;
+      background: #e8f4ff;
+      color: #5ca5eb;
+      margin-right: 6px;
+    }
+    .tag.active { background: #66a9e9; color: #fff; }
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #dfe6ee;
+      border-radius: 4px;
+      display: inline-block;
+      background: #fff;
+    }
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      padding-top: 16px;
+      color: #5c6673;
+    }
+    .page-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #e1e7ee;
+      background: #fff;
+      color: #6b7280;
+      border-radius: 4px;
+    }
+    .page-btn.active {
+      background: #65a9e8;
+      color: #fff;
+      border-color: #65a9e8;
+    }
+    .setting-float {
+      position: fixed;
+      right: 0;
+      top: 164px;
+      width: 42px;
+      height: 42px;
+      border-radius: 7px 0 0 7px;
+      background: #65a9e8;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 2px 8px rgba(52, 118, 176, .24);
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-badge">PRMS<br>售</div></div>
+    <div class="menu-toggle">☰</div>
+    <nav class="main-nav">
+      <a href="#">首页</a>
+      <a class="active" href="#">其他出库 ×</a>
+    </nav>
+    <div class="top-actions">
+      <span class="top-icon">◷</span>
+      <span class="top-icon">⇩</span>
+      <span class="top-icon">⌕</span>
+      <span class="top-icon">⛶</span>
+      <span class="avatar">李</span>
+      <span>欢迎您, 李静</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-icon">⌂</div>
+      <div class="side-icon">▣</div>
+      <div class="side-icon">▥</div>
+      <div class="side-icon">▤</div>
+      <div class="side-icon">◔</div>
+      <div class="side-icon">▌</div>
+      <div class="side-icon">●</div>
+      <div class="side-icon">▌</div>
+      <div class="side-icon">◔</div>
+      <div class="side-icon">▌</div>
+    </aside>
+
+    <main class="content">
+      <section class="panel">
+        <div class="biz-tabs">
+          <button class="biz-tab">借物出库</button>
+          <button class="biz-tab">报损出库</button>
+          <button class="biz-tab repair active">返修出库</button>
+        </div>
+
+        <div class="state-tabs">
+          <div class="state-tab">全部 (31)</div>
+          <div class="state-tab">待审核 (0)</div>
+          <div class="state-tab">待仓库作业 (0)</div>
+          <div class="state-tab">已出库 (8)</div>
+          <div class="state-tab active">待归还 (21)</div>
+          <div class="state-tab">异常 (0)</div>
+          <div class="state-tab">已完成 (2)</div>
+          <div class="state-tab">审核拒绝 (0)</div>
+          <div class="state-tab">取消 (0)</div>
+        </div>
+
+        <div class="filters">
+          <select class="select"><option>请选择出库仓库</option><option>SZ01东莞仓</option><option>海外仓中转仓</option></select>
+          <select class="select"><option>单号</option><option>SKU</option><option>供应商</option></select>
+          <input class="input" placeholder="请输入" />
+          <select class="select"><option>请选择创建人</option><option>张晶</option><option>李静</option></select>
+          <select class="select"><option>请选择审核状态</option><option>待审核</option><option>审核通过</option></select>
+          <select class="select"><option>是否需归还</option><option>是</option><option>否</option></select>
+          <select class="select"><option>归还状态</option><option>待归还</option><option>部分归还</option><option>已归还</option></select>
+          <select class="select"><option>创建时间</option><option>更新时间</option></select>
+          <div class="date-range"><input placeholder="开始日期" /><span>-</span><input placeholder="结束日期" /></div>
+          <button class="btn primary">搜索</button>
+          <button class="btn gray">重置</button>
+        </div>
+      </section>
+
+      <section class="table-panel">
+        <div class="toolbar">
+          <button class="btn">新建返修出库</button>
+          <button class="btn danger-light">取消</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="check-col"><span class="checkbox"></span></th>
+                <th class="order-col">单号</th>
+                <th class="type-col">单据类型</th>
+                <th class="warehouse-col">出库信息</th>
+                <th class="sku-col">sku信息</th>
+                <th class="logistics-col">物流信息</th>
+                <th class="receiver-col">收件人信息</th>
+                <th class="other-col">其他</th>
+                <th class="time-col">时间</th>
+                <th class="action-col">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span>共 21 条</span>
+          <select class="select" style="width:110px;min-width:110px"><option>20条/页</option></select>
+          <button class="page-btn">‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">›</button>
+          <span>前往</span>
+          <input class="input" style="width:52px;min-width:52px;text-align:center" value="1" />
+          <span>页</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="setting-float">⚙</div>
+
+  <script>
+    const rows = [
+      { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', repair:'待归还', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
+      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', repair:'待归还', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
+      { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', repair:'待归还', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
+      { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', repair:'待归还', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
+      { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', repair:'待归还', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
+    ];
+
+    const body = document.querySelector('#tableBody');
+    body.innerHTML = rows.map(row => `
+      <tr>
+        <td class="check-col"><span class="checkbox"></span></td>
+        <td>
+          单号：<a class="link">${row.no}</a><br>
+          出库单号：${row.out}<br>
+          关联单号：-<br>
+          <span class="tag">需归还</span><span class="tag active">${row.repair}</span>
+        </td>
+        <td>返修出库</td>
+        <td>出库仓库：${row.warehouse}<br>出库时间：${row.time}</td>
+        <td>
+          款数：<a class="link">${row.style}</a><br>
+          sku数量：<a class="link">${row.qty}</a><br>
+          SKU：${row.sku}<br>
+          供应商：${row.vendor}<br>
+          库存类型：次品
+        </td>
+        <td>物流单号：${row.logistics}<br>物流渠道：${row.channel}<br>运费：- CNY</td>
+        <td>收件人：${row.receiver}<br>收件电话：${row.phone}<br>收件人地址：${row.address}</td>
+        <td>所属部门：产品开发中心-工业开发部<br>备注：返修出库<br>附件：<a class="link">上传</a></td>
+        <td>创建人：张晶<br>创建时间：${row.create}<br>更新人：张晶<br>更新时间：${row.update}</td>
+        <td class="action-col">
+          <a class="link">查看</a><br>
+          <a class="link">返修</a><br>
+          <a class="link-danger">报损</a><br>
+          <a class="link">日志</a>
+        </td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.biz-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.biz-tab').forEach(item => item.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+    document.querySelectorAll('.state-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.state-tab').forEach(item => item.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
