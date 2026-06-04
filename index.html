@@ -1,13 +1,400 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>次品处理池原型</title>
-    <script type="module" crossorigin src="./assets/index-D6h9-Jms.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-poB49Doc.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>次品处理池原型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #1f2937;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 14px;
+    }
+    button, input, select { font: inherit; }
+    .page { min-height: 100vh; padding: 24px; }
+    .header {
+      display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;
+      padding: 22px 24px; margin-bottom: 16px; background: #fff;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+    }
+    .title { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; font-size: 24px; }
+    .desc, .muted { color: #6b7280; }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px; }
+    .card-label { color: #6b7280; margin-bottom: 8px; }
+    .card-value { font-size: 26px; font-weight: 650; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      padding: 14px 16px; margin-bottom: 12px; background: #fff;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+    }
+    .input, .select {
+      height: 34px; border: 1px solid #d9d9d9; border-radius: 6px;
+      padding: 0 11px; background: #fff; min-width: 200px;
+    }
+    .btn {
+      height: 34px; border: 1px solid #d9d9d9; border-radius: 6px;
+      background: #fff; color: #1f2937; padding: 0 14px; cursor: pointer;
+    }
+    .btn:hover { border-color: #1677ff; color: #1677ff; }
+    .btn-primary { color: #fff; background: #1677ff; border-color: #1677ff; }
+    .btn-primary:hover { color: #fff; background: #4096ff; border-color: #4096ff; }
+    .btn-danger { color: #fff; background: #ff4d4f; border-color: #ff4d4f; }
+    .btn-link { border: 0; background: transparent; color: #1677ff; padding: 0; height: auto; }
+    .btn-text { border: 0; background: transparent; color: #1677ff; }
+    .table-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 920px; }
+    th, td { height: 52px; padding: 0 16px; border-bottom: 1px solid #f0f0f0; text-align: left; white-space: nowrap; }
+    th { height: 44px; background: #fafafa; color: #6b7280; font-weight: 600; }
+    tr:hover td { background: #fafcff; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .actions { text-align: right; }
+    .sku-main { font-weight: 650; }
+    .sku-sub { color: #6b7280; font-size: 13px; margin-top: 2px; }
+    .tag {
+      display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+      border-radius: 4px; font-size: 12px; border: 1px solid #91caff; color: #1677ff; background: #e6f4ff;
+    }
+    .tag-red { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
+    .tag-green { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
+    .tag-gray { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
+    .mask {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
+      display: none; z-index: 20;
+    }
+    .mask.show { display: block; }
+    .modal, .drawer {
+      position: fixed; background: #fff; display: none; z-index: 21;
+      box-shadow: 0 6px 24px rgba(0,0,0,.16);
+    }
+    .modal.show, .drawer.show { display: block; }
+    .modal {
+      width: min(920px, calc(100vw - 48px)); max-height: calc(100vh - 72px);
+      left: 50%; top: 50%; transform: translate(-50%, -50%);
+      border-radius: 8px; overflow: hidden;
+    }
+    .drawer { width: min(560px, 92vw); right: 0; top: 0; height: 100vh; }
+    .modal-head, .drawer-head {
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; border-bottom: 1px solid #f0f0f0; font-size: 16px; font-weight: 650;
+    }
+    .modal-body, .drawer-body { padding: 20px; overflow: auto; max-height: calc(100vh - 160px); }
+    .drawer-body { max-height: calc(100vh - 116px); }
+    .modal-foot, .drawer-foot {
+      display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px;
+      border-top: 1px solid #f0f0f0; background: #fff;
+    }
+    .close { border: 0; background: transparent; font-size: 22px; color: #6b7280; cursor: pointer; }
+    .desc-grid {
+      display: grid; grid-template-columns: 120px 1fr 120px 1fr;
+      border: 1px solid #f0f0f0; border-bottom: 0; border-right: 0;
+    }
+    .desc-grid div { min-height: 40px; padding: 10px 12px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+    .desc-grid .label { background: #fafafa; color: #6b7280; }
+    .rule-toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; }
+    .condition-group { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+    .condition-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .condition-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 72px; gap: 10px; margin-bottom: 10px; }
+    .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .radio-row label { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 6px; cursor: pointer; }
+    .hint { margin-top: 8px; padding: 10px 12px; border: 1px solid #ffd591; background: #fff7e6; border-radius: 6px; color: #6b7280; line-height: 1.7; }
+    .discard-note { display: none; margin-top: 8px; padding: 12px; border: 1px solid #ffa39e; background: #fff1f0; border-radius: 6px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .field { display: grid; gap: 6px; }
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      display: none; padding: 9px 16px; background: #fff; border: 1px solid #e5e7eb;
+      border-radius: 6px; box-shadow: 0 4px 18px rgba(0,0,0,.12); z-index: 30;
+    }
+    .toast.show { display: block; }
+    .empty { text-align: center; padding: 40px; color: #9ca3af; }
+    @media (max-width: 760px) {
+      .page { padding: 14px; }
+      .header, .rule-toolbar { flex-direction: column; align-items: stretch; }
+      .cards, .form-row, .condition-row, .desc-grid { grid-template-columns: 1fr; }
+      .input, .select { min-width: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="header">
+      <div>
+        <h1 class="title">次品处理池</h1>
+        <div class="desc">按 SKU + 供应商聚合次品库存，快速查看来源并设置返修或报损方案。</div>
+      </div>
+      <button class="btn" id="openConfig">次品配置</button>
+    </section>
+
+    <section class="cards">
+      <div class="card"><div class="card-label">待处理 SKU + 供应商组合</div><div class="card-value" id="statSku">4 组</div></div>
+      <div class="card"><div class="card-label">待处理次品数量</div><div class="card-value" id="statQty">267 件</div></div>
+      <div class="card"><div class="card-label">待处理总成本</div><div class="card-value" id="statCost">¥252,340</div></div>
+    </section>
+
+    <section class="toolbar">
+      <strong>筛选</strong>
+      <input class="input" id="filterSku" placeholder="按 SKU 查询" />
+      <input class="input" id="filterSupplier" placeholder="按供应商查询" />
+      <input class="input" id="filterWarehouse" placeholder="按仓库查询" />
+      <button class="btn" id="resetFilter">重置</button>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th><th>供应商</th><th>仓库</th><th class="num">次品数量</th>
+            <th class="num">次品总成本</th><th class="num">平均单价</th><th>状态</th><th class="actions">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <div class="mask" id="mask"></div>
+  <section class="modal" id="configModal">
+    <div class="modal-head"><span>次品配置规则</span><button class="close" data-close>×</button></div>
+    <div class="modal-body">
+      <div class="rule-toolbar">
+        <span class="muted">规则之间按优先级命中；条件组之间为 OR，组内条件为 AND。</span>
+        <button class="btn btn-primary" id="addRule">新增规则</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>规则名称</th><th>优先级</th><th>触发规则</th><th>收货指引</th><th>状态</th><th class="actions">操作</th></tr></thead>
+          <tbody id="ruleBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close>关闭</button></div>
+  </section>
+
+  <section class="modal" id="ruleModal">
+    <div class="modal-head"><span id="ruleTitle">新增次品配置规则</span><button class="close" data-close>×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="field">规则名称<input class="input" id="ruleName" placeholder="请输入规则名称" /></label>
+        <label class="field">优先级<input class="input" id="rulePriority" type="number" min="1" max="99" value="5" /></label>
+      </div>
+      <h3>触发规则</h3>
+      <div id="conditionGroups"></div>
+      <button class="btn btn-text" id="addGroup">+ 添加条件组 (OR)</button>
+      <div class="form-row">
+        <label class="field">收货指引结果
+          <select class="select" id="ruleAction">
+            <option value="上架至次品区">上架至次品区</option>
+            <option value="当场丢弃">当场丢弃</option>
+          </select>
+        </label>
+        <label class="field">状态
+          <select class="select" id="ruleStatus">
+            <option value="启用">启用</option>
+            <option value="停用">停用</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="saveRule">保存规则</button></div>
+  </section>
+
+  <section class="drawer" id="sourceDrawer">
+    <div class="drawer-head"><span>数据来源明细</span><button class="close" data-close>×</button></div>
+    <div class="drawer-body" id="sourceBody"></div>
+    <div class="drawer-foot"><button class="btn" data-close>关闭</button></div>
+  </section>
+
+  <section class="drawer" id="solutionDrawer">
+    <div class="drawer-head"><span>设置处理方案</span><button class="close" data-close>×</button></div>
+    <div class="drawer-body" id="solutionBody"></div>
+    <div class="drawer-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="confirmSolution">确认方案</button></div>
+  </section>
+
+  <section class="modal" id="warnModal">
+    <div class="modal-head"><span>返修成本偏高，请确认最终处理方案</span><button class="close" data-close>×</button></div>
+    <div class="modal-body" id="warnBody"></div>
+    <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="finalRepair">确认返修</button><button class="btn btn-danger" id="finalScrap">报损</button></div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const rows = [
+      { id:'POOL-001', sku:'SKU-ALPHA-001', productName:'智能门锁主板', supplier:'深圳启明电子', warehouse:'华东退件仓', quantity:86, totalCost:142800, avgPrice:1660.47, status:'待处理', sources:[['RTN20260529001','客户退件',24,'外壳破损'],['RTN20260530017','售后退件',42,'功能异常'],['RTN20260531008','渠道退件',20,'包装污染']] },
+      { id:'POOL-002', sku:'SKU-BETA-118', productName:'便携储能电芯', supplier:'宁波辰禾能源', warehouse:'华南退件仓', quantity:38, totalCost:32680, avgPrice:860, status:'待处理', sources:[['RTN20260528031','仓内质检',18,'电压异常'],['RTN20260531014','客户退件',20,'外观划伤']] },
+      { id:'POOL-003', sku:'SKU-GAMMA-320', productName:'无线温控器', supplier:'苏州松岭科技', warehouse:'华东退件仓', quantity:124, totalCost:23560, avgPrice:190, status:'待处理', sources:[['RTN20260527004','客户退件',51,'屏幕暗斑'],['RTN20260530022','平台退件',73,'配件缺失']] },
+      { id:'POOL-004', sku:'SKU-DELTA-056', productName:'工业摄像头', supplier:'杭州图灵视觉', warehouse:'华北退件仓', quantity:19, totalCost:51300, avgPrice:2700, status:'待处理', sources:[['RTN20260531019','售后退件',19,'镜头进尘']] }
+    ];
+    let rules = [
+      { id:'RULE-001', name:'高货值电子件入次品区', priority:5, status:'启用', action:'上架至次品区', summary:'SKU 类目 = 电子件 且 货值区间 >= ¥10,000' },
+      { id:'RULE-002', name:'低单价破损件当场丢弃', priority:8, status:'启用', action:'当场丢弃', summary:'单价区间 0-50 且 次品原因 = 外观破损' },
+      { id:'RULE-003', name:'指定 SKU 返修池规则', priority:3, status:'停用', action:'上架至次品区', summary:'SKU in SKU-ALPHA-001、SKU-DELTA-056' }
+    ];
+    let currentRow = null;
+    let warnState = null;
+
+    const money = v => '¥' + Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+    const qs = s => document.querySelector(s);
+    const showToast = text => { const el = qs('#toast'); el.textContent = text; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1800); };
+    const openLayer = id => { qs('#mask').classList.add('show'); qs(id).classList.add('show'); };
+    const closeLayers = () => { document.querySelectorAll('.show').forEach(el => el.classList.remove('show')); };
+
+    function renderTable() {
+      const filters = {
+        sku: qs('#filterSku').value.trim().toLowerCase(),
+        supplier: qs('#filterSupplier').value.trim().toLowerCase(),
+        warehouse: qs('#filterWarehouse').value.trim().toLowerCase()
+      };
+      const filtered = rows.filter(r =>
+        (!filters.sku || r.sku.toLowerCase().includes(filters.sku)) &&
+        (!filters.supplier || r.supplier.toLowerCase().includes(filters.supplier)) &&
+        (!filters.warehouse || r.warehouse.toLowerCase().includes(filters.warehouse))
+      );
+      qs('#statSku').textContent = filtered.length + ' 组';
+      qs('#statQty').textContent = filtered.reduce((a, r) => a + r.quantity, 0) + ' 件';
+      qs('#statCost').textContent = money(filtered.reduce((a, r) => a + r.totalCost, 0));
+      qs('#tableBody').innerHTML = filtered.length ? filtered.map(r => `
+        <tr>
+          <td><div class="sku-main">${r.sku}</div><div class="sku-sub">${r.productName}</div></td>
+          <td>${r.supplier}</td><td>${r.warehouse}</td>
+          <td class="num"><button class="btn-link" onclick="openSource('${r.id}')">${r.quantity}</button></td>
+          <td class="num">${money(r.totalCost)}</td><td class="num">${money(r.avgPrice)}</td>
+          <td><span class="tag">${r.status}</span></td>
+          <td class="actions"><button class="btn btn-primary" onclick="openSolution('${r.id}')">设置方案</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="8"><div class="empty">暂无次品处理池数据</div></td></tr>';
+    }
+
+    function renderRules() {
+      qs('#ruleBody').innerHTML = rules.map(r => `
+        <tr>
+          <td>${r.name}</td><td>${r.priority}</td><td class="muted">${r.summary}</td>
+          <td><span class="tag ${r.action === '当场丢弃' ? 'tag-red' : ''}">${r.action}</span></td>
+          <td><span class="tag ${r.status === '启用' ? 'tag-green' : 'tag-gray'}">${r.status}</span></td>
+          <td class="actions"><button class="btn-link" onclick="openRuleEditor('${r.id}')">编辑</button></td>
+        </tr>
+      `).join('');
+    }
+
+    window.openSource = id => {
+      const r = rows.find(x => x.id === id);
+      qs('#sourceBody').innerHTML = `
+        <div class="desc-grid">
+          <div class="label">SKU</div><div>${r.sku}</div><div class="label">供应商</div><div>${r.supplier}</div>
+          <div class="label">当前数量</div><div>${r.quantity}</div><div class="label">次品总成本</div><div>${money(r.totalCost)}</div>
+        </div>
+        <h3>来源单据</h3>
+        <div class="table-wrap"><table><thead><tr><th>来源单据</th><th>来源</th><th class="num">数量</th><th>原因</th></tr></thead><tbody>
+          ${r.sources.map(s => `<tr><td>${s[0]}</td><td>${s[1]}</td><td class="num">${s[2]}</td><td>${s[3]}</td></tr>`).join('')}
+        </tbody></table></div>`;
+      openLayer('#sourceDrawer');
+    };
+
+    window.openSolution = id => {
+      currentRow = rows.find(x => x.id === id);
+      qs('#solutionBody').innerHTML = `
+        <div class="desc-grid">
+          <div class="label">SKU</div><div>${currentRow.sku}</div><div class="label">供应商</div><div>${currentRow.supplier}</div>
+          <div class="label">次品数量</div><div>${currentRow.quantity}</div><div class="label">总成本</div><div>${money(currentRow.totalCost)}</div>
+        </div>
+        <div style="margin-top:18px">
+          <div class="field"><span>是否返修</span>
+            <div class="radio-row">
+              <label><input type="radio" name="repair" value="yes" checked> 是，返修</label>
+              <label><input type="radio" name="repair" value="no"> 否，报损</label>
+            </div>
+          </div>
+          <div id="repairFields" class="form-row">
+            <label class="field">返修数量<input class="input" id="repairQty" type="number" min="1" max="${currentRow.quantity}" value="${currentRow.quantity}"></label>
+            <label class="field">返修成本<input class="input" id="repairCost" type="number" min="0" value="0"></label>
+          </div>
+          <div class="hint" id="repairHint">若成本大于1000，返修成本占总成本80%以上，不建议返修；若成本小于1000，返修成本占总成本60%以上，不建议返修</div>
+          <div class="discard-note" id="discardNote">将让仓库对次品全部报损丢弃</div>
+        </div>`;
+      document.querySelectorAll('input[name="repair"]').forEach(el => el.addEventListener('change', updateRepairMode));
+      openLayer('#solutionDrawer');
+    };
+
+    function updateRepairMode() {
+      const repair = document.querySelector('input[name="repair"]:checked').value === 'yes';
+      qs('#repairFields').style.display = repair ? 'grid' : 'none';
+      qs('#repairHint').style.display = repair ? 'block' : 'none';
+      qs('#discardNote').style.display = repair ? 'none' : 'block';
+    }
+
+    function submitSolution() {
+      if (!currentRow) return;
+      const repair = document.querySelector('input[name="repair"]:checked').value === 'yes';
+      if (!repair) { closeLayers(); showToast('已设置为全部报损丢弃'); return; }
+      const qty = Number(qs('#repairQty').value);
+      const cost = Number(qs('#repairCost').value);
+      if (!qty || qty < 1 || qty > currentRow.quantity) { showToast('返修数量需大于 0 且不超过当前次品数量'); return; }
+      if (Number.isNaN(cost) || cost < 0) { showToast('返修成本需大于等于 0'); return; }
+      const ratio = cost / currentRow.totalCost * 100;
+      const threshold = cost > 1000 ? 80 : 60;
+      if (ratio >= threshold) {
+        warnState = { ratio, threshold };
+        qs('#warnBody').innerHTML = `<span class="tag">返修成本占总成本 ${ratio.toFixed(2)}%</span><p>返修成本占总成本 ${ratio.toFixed(2)}%，大于${threshold}%，不建议返修，请确认最终处理方案。</p>`;
+        openLayer('#warnModal');
+        return;
+      }
+      closeLayers(); showToast('已确认返修，返修申请已生成');
+    }
+
+    function renderConditionGroups() {
+      qs('#conditionGroups').innerHTML = `
+        <div class="condition-group">
+          <div class="condition-head"><span class="tag">条件组 1</span><span class="muted">组内条件需全部满足 (AND)</span></div>
+          <div class="condition-row">
+            <select class="select"><option>SKU</option><option>仓库</option><option>单价区间</option><option>货值区间</option><option>次品原因</option></select>
+            <input class="input" value="SKU-ALPHA-001" placeholder="请输入或导入固定 SKU">
+            <button class="btn btn-text" type="button">删除</button>
+          </div>
+          <button class="btn" type="button">+ 添加条件 (AND)</button>
+        </div>`;
+    }
+
+    window.openRuleEditor = id => {
+      const r = rules.find(x => x.id === id);
+      qs('#ruleTitle').textContent = r ? '编辑次品配置规则' : '新增次品配置规则';
+      qs('#ruleName').value = r?.name || '';
+      qs('#rulePriority').value = r?.priority || 5;
+      qs('#ruleAction').value = r?.action || '上架至次品区';
+      qs('#ruleStatus').value = r?.status || '启用';
+      renderConditionGroups();
+      qs('#saveRule').dataset.id = id || '';
+      openLayer('#ruleModal');
+    };
+
+    function saveRule() {
+      const id = qs('#saveRule').dataset.id;
+      const next = {
+        id: id || 'RULE-' + String(rules.length + 1).padStart(3, '0'),
+        name: qs('#ruleName').value || '未命名次品规则',
+        priority: Number(qs('#rulePriority').value || 5),
+        status: qs('#ruleStatus').value,
+        action: qs('#ruleAction').value,
+        summary: 'SKU = SKU-ALPHA-001'
+      };
+      rules = id ? rules.map(r => r.id === id ? next : r) : [next, ...rules];
+      renderRules(); closeLayers(); showToast(id ? '次品规则已更新' : '次品规则已保存');
+    }
+
+    qs('#openConfig').onclick = () => { renderRules(); openLayer('#configModal'); };
+    qs('#addRule').onclick = () => openRuleEditor();
+    qs('#saveRule').onclick = saveRule;
+    qs('#addGroup').onclick = renderConditionGroups;
+    qs('#confirmSolution').onclick = submitSolution;
+    qs('#finalRepair').onclick = () => { closeLayers(); showToast('已确认返修'); };
+    qs('#finalScrap').onclick = () => { closeLayers(); showToast('已改为报损'); };
+    qs('#resetFilter').onclick = () => { qs('#filterSku').value = ''; qs('#filterSupplier').value = ''; qs('#filterWarehouse').value = ''; renderTable(); };
+    ['#filterSku', '#filterSupplier', '#filterWarehouse'].forEach(id => qs(id).addEventListener('input', renderTable));
+    document.querySelectorAll('[data-close], #mask').forEach(el => el.addEventListener('click', closeLayers));
+    renderTable();
+  </script>
+</body>
 </html>
