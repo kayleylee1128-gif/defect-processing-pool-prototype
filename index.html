@@ -95,9 +95,25 @@
     .desc-grid div { min-height: 40px; padding: 10px 12px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
     .desc-grid .label { background: #fafafa; color: #6b7280; }
     .rule-toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; }
-    .condition-group { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
-    .condition-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .condition-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 72px; gap: 10px; margin-bottom: 10px; }
+    .condition-group { border: 1px solid #d9e1ec; border-radius: 8px; padding: 18px; margin-bottom: 14px; background: #fff; }
+    .condition-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .condition-head-left { display: flex; align-items: center; gap: 12px; }
+    .condition-row { display: grid; grid-template-columns: 188px minmax(260px, 1fr) 116px 36px; gap: 10px; margin-bottom: 14px; align-items: center; }
+    .condition-type { border-color: #1677ff; color: #1f2937; }
+    .sku-value-wrap { position: relative; }
+    .sku-value-wrap::after {
+      content: "⌄"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: #b8c0cc; pointer-events: none;
+    }
+    .sku-value { width: 100%; padding-right: 34px; color: #1f2937; }
+    .sku-value::placeholder { color: #b8c0cc; }
+    .import-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .delete-icon {
+      width: 34px; height: 34px; border: 0; background: transparent; color: #b8c0cc;
+      cursor: pointer; font-size: 20px; border-radius: 6px;
+    }
+    .delete-icon:hover { background: #f5f7fb; color: #ff4d4f; }
+    .add-condition { min-width: 150px; color: #4b5563; }
     .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .radio-row label { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 6px; cursor: pointer; }
     .hint { margin-top: 8px; padding: 10px 12px; border: 1px solid #ffd591; background: #fff7e6; border-radius: 6px; color: #6b7280; line-height: 1.7; }
@@ -236,6 +252,8 @@
     ];
     let currentRow = null;
     let warnState = null;
+    let editingRuleId = '';
+    let conditionGroups = [[{ field: 'SKU', value: '' }]];
 
     const money = v => '¥' + Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
     const qs = s => document.querySelector(s);
@@ -345,40 +363,132 @@
       closeLayers(); showToast('已确认返修，返修申请已生成');
     }
 
-    function renderConditionGroups() {
-      qs('#conditionGroups').innerHTML = `
-        <div class="condition-group">
-          <div class="condition-head"><span class="tag">条件组 1</span><span class="muted">组内条件需全部满足 (AND)</span></div>
-          <div class="condition-row">
-            <select class="select"><option>SKU</option><option>仓库</option><option>单价区间</option><option>货值区间</option><option>次品原因</option></select>
-            <input class="input" value="SKU-ALPHA-001" placeholder="请输入或导入固定 SKU">
-            <button class="btn btn-text" type="button">删除</button>
+    function conditionValueHtml(condition, groupIndex, conditionIndex) {
+      if (condition.field === 'SKU') {
+        return `
+          <div class="sku-value-wrap">
+            <input class="input sku-value" value="${condition.value || ''}" placeholder="输入SKU，回车添加"
+              oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)"
+              onkeydown="handleSkuEnter(event, ${groupIndex}, ${conditionIndex})">
           </div>
-          <button class="btn" type="button">+ 添加条件 (AND)</button>
-        </div>`;
+          <button class="btn import-btn" type="button" onclick="batchImportSku(${groupIndex}, ${conditionIndex})">↥ 批量导入</button>
+        `;
+      }
+      if (condition.field === '单价区间' || condition.field === '货值区间') {
+        return `
+          <input class="input" value="${condition.value || ''}" placeholder="输入区间，如 50-200"
+            oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)">
+          <span></span>
+        `;
+      }
+      return `
+        <input class="input" value="${condition.value || ''}" placeholder="请选择或输入具体值"
+          oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)">
+        <span></span>
+      `;
     }
+
+    function renderConditionGroups() {
+      qs('#conditionGroups').innerHTML = conditionGroups.map((group, groupIndex) => `
+        <div class="condition-group">
+          <div class="condition-head">
+            <div class="condition-head-left">
+              <span class="tag">条件组 ${groupIndex + 1}</span>
+              <span class="muted">组内条件需全部满足 (AND)</span>
+            </div>
+            <button class="btn btn-text" type="button" onclick="removeConditionGroup(${groupIndex})">▥ 删除组</button>
+          </div>
+          ${group.map((condition, conditionIndex) => `
+            <div class="condition-row">
+              <select class="select condition-type" onchange="updateCondition(${groupIndex}, ${conditionIndex}, 'field', this.value)">
+                ${['SKU', '仓库', '单价区间', '货值区间', '次品原因'].map(option => `<option ${condition.field === option ? 'selected' : ''}>${option}</option>`).join('')}
+              </select>
+              ${conditionValueHtml(condition, groupIndex, conditionIndex)}
+              <button class="delete-icon" type="button" title="删除条件" onclick="removeCondition(${groupIndex}, ${conditionIndex})">▥</button>
+            </div>
+          `).join('')}
+          <button class="btn add-condition" type="button" onclick="addCondition(${groupIndex})">＋ 添加条件 (AND)</button>
+        </div>
+      `).join('');
+    }
+
+    window.updateCondition = (groupIndex, conditionIndex, key, value) => {
+      conditionGroups[groupIndex][conditionIndex][key] = value;
+      if (key === 'field') {
+        conditionGroups[groupIndex][conditionIndex].value = value === 'SKU' ? '' : '';
+        renderConditionGroups();
+      }
+    };
+
+    window.addCondition = groupIndex => {
+      conditionGroups[groupIndex].push({ field: 'SKU', value: '' });
+      renderConditionGroups();
+    };
+
+    window.removeCondition = (groupIndex, conditionIndex) => {
+      if (conditionGroups[groupIndex].length <= 1) {
+        showToast('每个条件组至少保留一个条件');
+        return;
+      }
+      conditionGroups[groupIndex].splice(conditionIndex, 1);
+      renderConditionGroups();
+    };
+
+    window.removeConditionGroup = groupIndex => {
+      if (conditionGroups.length <= 1) {
+        showToast('至少保留一个条件组');
+        return;
+      }
+      conditionGroups.splice(groupIndex, 1);
+      renderConditionGroups();
+    };
+
+    window.addConditionGroup = () => {
+      conditionGroups.push([{ field: 'SKU', value: '' }]);
+      renderConditionGroups();
+    };
+
+    window.batchImportSku = (groupIndex, conditionIndex) => {
+      conditionGroups[groupIndex][conditionIndex].value = 'SKU-ALPHA-001, SKU-DELTA-056';
+      renderConditionGroups();
+      showToast('已导入 2 个固定 SKU');
+    };
+
+    window.handleSkuEnter = (event, groupIndex, conditionIndex) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      const value = event.target.value.trim();
+      if (!value) return;
+      conditionGroups[groupIndex][conditionIndex].value = value.includes(',') ? value : `${value}, `;
+      renderConditionGroups();
+      showToast('SKU 已添加');
+    };
 
     window.openRuleEditor = id => {
       const r = rules.find(x => x.id === id);
+      editingRuleId = id || '';
       qs('#ruleTitle').textContent = r ? '编辑次品配置规则' : '新增次品配置规则';
       qs('#ruleName').value = r?.name || '';
       qs('#rulePriority').value = r?.priority || 5;
       qs('#ruleAction').value = r?.action || '上架至次品区';
       qs('#ruleStatus').value = r?.status || '启用';
+      conditionGroups = [[{ field: 'SKU', value: r ? 'SKU-ALPHA-001' : '' }]];
       renderConditionGroups();
-      qs('#saveRule').dataset.id = id || '';
       openLayer('#ruleModal');
     };
 
     function saveRule() {
-      const id = qs('#saveRule').dataset.id;
+      const id = editingRuleId;
+      const summary = conditionGroups.map(group =>
+        group.map(condition => `${condition.field}${condition.value ? ' = ' + condition.value : ''}`).join(' 且 ')
+      ).join(' 或 ');
       const next = {
         id: id || 'RULE-' + String(rules.length + 1).padStart(3, '0'),
         name: qs('#ruleName').value || '未命名次品规则',
         priority: Number(qs('#rulePriority').value || 5),
         status: qs('#ruleStatus').value,
         action: qs('#ruleAction').value,
-        summary: 'SKU = SKU-ALPHA-001'
+        summary: summary || 'SKU'
       };
       rules = id ? rules.map(r => r.id === id ? next : r) : [next, ...rules];
       renderRules(); closeLayers(); showToast(id ? '次品规则已更新' : '次品规则已保存');
@@ -387,7 +497,7 @@
     qs('#openConfig').onclick = () => { renderRules(); openLayer('#configModal'); };
     qs('#addRule').onclick = () => openRuleEditor();
     qs('#saveRule').onclick = saveRule;
-    qs('#addGroup').onclick = renderConditionGroups;
+    qs('#addGroup').onclick = () => window.addConditionGroup();
     qs('#confirmSolution').onclick = submitSolution;
     qs('#finalRepair').onclick = () => { closeLayers(); showToast('已确认返修'); };
     qs('#finalScrap').onclick = () => { closeLayers(); showToast('已改为报损'); };
