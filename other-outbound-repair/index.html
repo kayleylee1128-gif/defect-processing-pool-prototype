@@ -3,49 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>其他出库 - 返修出库原型</title>
+  <title>其他出库 - 返修出库</title>
   <style>
+    :root {
+      --primary: #1677ff;
+      --primary-hover: #4096ff;
+      --text: #1f2937;
+      --muted: #667085;
+      --border: #d9d9d9;
+      --border-light: #edf0f5;
+      --bg: #f5f7fa;
+      --header: #5aa7e8;
+      --danger: #ff4d4f;
+    }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: #eef2f7;
-      color: #2f3b4a;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
       font-size: 14px;
+      line-height: 1.5715;
     }
     button, input, select { font: inherit; }
     .topbar {
       height: 44px;
-      background: #65a9e8;
+      background: var(--header);
       color: #fff;
       display: flex;
       align-items: center;
-      box-shadow: 0 1px 4px rgba(29, 78, 130, .18);
+      box-shadow: 0 1px 4px rgba(31, 74, 120, .18);
     }
     .brand {
-      width: 58px;
+      width: 52px;
       height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #5aa2e4;
     }
     .brand-badge {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: #f5a623;
+      background: #faad14;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 11px;
       font-weight: 700;
-      line-height: 1;
+      line-height: 1.05;
     }
     .menu-toggle {
-      width: 62px;
+      width: 48px;
       text-align: center;
-      font-size: 22px;
+      font-size: 20px;
       opacity: .95;
     }
     .main-nav {
@@ -54,17 +65,17 @@
       align-items: stretch;
     }
     .main-nav a {
-      min-width: 108px;
-      padding: 0 18px;
+      min-width: 104px;
+      padding: 0 16px;
       color: #fff;
       text-decoration: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
     }
     .main-nav a.active {
-      background: rgba(255,255,255,.18);
+      background: rgba(22, 119, 255, .18);
       font-weight: 600;
     }
     .top-actions {
@@ -72,14 +83,15 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      padding-right: 22px;
+      padding-right: 20px;
+      color: rgba(255,255,255,.95);
     }
-    .top-icon { font-size: 20px; opacity: .95; }
+    .top-icon { font-size: 17px; }
     .avatar {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: #233142;
+      background: #1f2937;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -87,220 +99,245 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 58px 1fr;
+      grid-template-columns: 52px minmax(1180px, 1fr);
       min-height: calc(100vh - 44px);
     }
     .sidebar {
       background: #fff;
-      border-right: 1px solid #dfe6ef;
-      padding-top: 20px;
+      border-right: 1px solid #e6ebf2;
+      padding-top: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 22px;
     }
     .side-icon {
-      width: 26px;
-      height: 26px;
-      color: #3d4652;
+      width: 28px;
+      height: 28px;
+      color: #3b4654;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      border-radius: 6px;
+      font-size: 18px;
+    }
+    .side-icon.active {
+      background: #e6f4ff;
+      color: var(--primary);
     }
     .content {
-      padding: 12px;
-      min-width: 1200px;
+      padding: 12px 16px 16px;
+      overflow-x: auto;
     }
-    .panel {
+    .card {
       background: #fff;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+      border: 1px solid #edf0f5;
+    }
+    .filter-card {
+      padding: 14px 20px 16px;
       margin-bottom: 12px;
-      padding: 12px 22px 14px;
     }
     .biz-tabs {
       display: flex;
       align-items: center;
       gap: 8px;
-      height: 38px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .biz-tab {
-      min-width: 86px;
-      height: 30px;
-      border: 1px solid #d7e3ef;
+      height: 34px;
+      min-width: 96px;
+      padding: 0 18px;
+      border: 1px solid var(--border);
       background: #fff;
-      color: #41546a;
-      border-radius: 3px;
+      color: #475467;
+      border-radius: 4px;
       cursor: pointer;
+      transition: all .18s;
+    }
+    .biz-tab:hover {
+      color: var(--primary);
+      border-color: var(--primary-hover);
     }
     .biz-tab.active {
-      background: #67a9e7;
-      border-color: #67a9e7;
+      background: var(--primary);
+      border-color: var(--primary);
       color: #fff;
-    }
-    .biz-tab.repair {
-      position: relative;
-      min-width: 112px;
-      height: 42px;
-      margin-left: 2px;
-      border: 2px solid #ff4d3d;
-      color: #f0493a;
-      background: #fff;
-      font-size: 16px;
       font-weight: 600;
-      border-radius: 4px;
     }
     .state-tabs {
       display: flex;
       align-items: center;
-      gap: 30px;
-      height: 34px;
-      border-bottom: 1px solid #dce4ec;
+      gap: 28px;
+      min-height: 38px;
+      border-bottom: 1px solid #e5e7eb;
       margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: nowrap;
     }
     .state-tab {
-      height: 34px;
-      color: #2f3b4a;
+      height: 38px;
+      color: #344054;
       cursor: pointer;
-      white-space: nowrap;
       border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      transition: all .18s;
     }
+    .state-tab:hover { color: var(--primary); }
     .state-tab.active {
-      color: #5a9fe2;
-      border-bottom-color: #5a9fe2;
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 500;
     }
     .filters {
       display: grid;
-      grid-template-columns: 220px 120px 220px 160px 160px 160px 150px 150px minmax(220px, 1fr) auto auto;
+      grid-template-columns: 220px 120px 230px 170px 170px 160px 160px minmax(230px, 1fr) auto auto;
       gap: 10px;
       align-items: center;
     }
     .input, .select {
       width: 100%;
-      height: 30px;
-      border: 1px solid #dbe3ec;
+      height: 32px;
+      border: 1px solid var(--border);
       border-radius: 4px;
       background: #fff;
-      color: #374151;
-      padding: 0 10px;
+      color: #344054;
+      padding: 0 11px;
       outline: none;
+      transition: border-color .18s, box-shadow .18s;
     }
-    .input::placeholder { color: #bcc7d3; }
-    .select { color: #8b98a8; }
+    .input:focus, .select:focus, .date-range:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, .1);
+    }
+    .input::placeholder { color: #bfbfbf; }
+    .select { color: #667085; }
     .date-range {
       display: grid;
       grid-template-columns: 1fr 24px 1fr;
       align-items: center;
-      border: 1px solid #dbe3ec;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      height: 30px;
-      padding: 0 8px;
-      color: #9aa6b4;
+      height: 32px;
+      padding: 0 10px;
+      color: #98a2b3;
+      transition: border-color .18s, box-shadow .18s;
     }
     .date-range input {
       border: 0;
       outline: 0;
       min-width: 0;
-      color: #8b98a8;
+      color: #344054;
     }
     .btn {
-      height: 30px;
-      border: 1px solid #d6e5f5;
+      height: 32px;
+      border: 1px solid var(--border);
       border-radius: 4px;
       padding: 0 16px;
       background: #fff;
-      color: #4b87c8;
+      color: #344054;
       cursor: pointer;
       white-space: nowrap;
+      transition: all .18s;
+    }
+    .btn:hover {
+      color: var(--primary);
+      border-color: var(--primary-hover);
     }
     .btn.primary {
-      background: #65a9e8;
-      border-color: #65a9e8;
+      background: var(--primary);
+      border-color: var(--primary);
       color: #fff;
+      box-shadow: 0 2px 0 rgba(5, 145, 255, .1);
     }
-    .btn.gray {
-      background: #8b94a1;
-      border-color: #8b94a1;
+    .btn.primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
       color: #fff;
     }
     .btn.danger-light {
-      color: #ff5b5b;
-      background: #fff5f5;
-      border-color: #ffd5d5;
-    }
-    .table-panel {
+      color: var(--danger);
       background: #fff;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
-      padding: 22px 22px 16px;
+      border-color: #ffccc7;
+    }
+    .table-card {
+      padding: 18px 20px 14px;
     }
     .toolbar {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 12px;
     }
     .table-wrap {
-      border: 1px solid #e1e6ec;
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
       overflow: auto;
-      max-height: calc(100vh - 310px);
+      max-height: calc(100vh - 300px);
+      background: #fff;
     }
     table {
       width: 100%;
-      min-width: 1800px;
+      min-width: 1760px;
       border-collapse: collapse;
       table-layout: fixed;
     }
     th, td {
-      border-right: 1px solid #e5e9ef;
-      border-bottom: 1px solid #e5e9ef;
-      padding: 12px 10px;
+      border-right: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+      padding: 13px 12px;
       vertical-align: top;
       text-align: left;
       line-height: 1.75;
-      color: #66717f;
+      color: #667085;
+      word-break: break-word;
     }
     th {
-      height: 42px;
-      padding: 9px 10px;
-      color: #2f3b4a;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      height: 44px;
+      padding: 10px 12px;
+      color: #1f2937;
       font-weight: 600;
-      background: #fbfcfe;
+      background: #fafafa;
     }
-    tr:hover td { background: #fbfdff; }
-    .check-col { width: 42px; text-align: center; }
-    .order-col { width: 245px; }
-    .type-col { width: 155px; }
-    .warehouse-col { width: 210px; }
-    .sku-col { width: 210px; }
-    .logistics-col { width: 220px; }
-    .receiver-col { width: 260px; }
-    .other-col { width: 210px; }
-    .time-col { width: 250px; }
-    .action-col { width: 80px; text-align: center; }
+    tr:hover td { background: #fafcff; }
+    .check-col { width: 44px; text-align: center; }
+    .order-col { width: 250px; }
+    .type-col { width: 160px; }
+    .warehouse-col { width: 220px; }
+    .sku-col { width: 220px; }
+    .logistics-col { width: 230px; }
+    .receiver-col { width: 275px; }
+    .other-col { width: 220px; }
+    .time-col { width: 260px; }
+    .action-col { width: 82px; text-align: center; }
     .link {
-      color: #45a2ff;
+      color: var(--primary);
       text-decoration: none;
       cursor: pointer;
     }
-    .link-danger { color: #ff4d5f; }
-    .tag {
+    .link:hover { color: var(--primary-hover); }
+    .link-danger { color: var(--danger); }
+    .status-tag {
       display: inline-flex;
       align-items: center;
       height: 22px;
       padding: 0 8px;
       border-radius: 4px;
-      background: #e8f4ff;
-      color: #5ca5eb;
-      margin-right: 6px;
+      background: #e6f4ff;
+      color: var(--primary);
+      border: 1px solid #91caff;
+      font-size: 12px;
+      margin-top: 4px;
     }
-    .tag.active { background: #66a9e9; color: #fff; }
     .checkbox {
       width: 18px;
       height: 18px;
-      border: 2px solid #dfe6ee;
-      border-radius: 4px;
+      border: 1px solid #d9d9d9;
+      border-radius: 3px;
       display: inline-block;
       background: #fff;
     }
@@ -308,37 +345,38 @@
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 12px;
-      padding-top: 16px;
-      color: #5c6673;
+      gap: 10px;
+      padding-top: 14px;
+      color: #667085;
     }
     .page-btn {
-      width: 34px;
-      height: 34px;
-      border: 1px solid #e1e7ee;
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
       background: #fff;
-      color: #6b7280;
+      color: #344054;
       border-radius: 4px;
+      cursor: pointer;
     }
     .page-btn.active {
-      background: #65a9e8;
+      background: var(--primary);
       color: #fff;
-      border-color: #65a9e8;
+      border-color: var(--primary);
     }
     .setting-float {
       position: fixed;
       right: 0;
-      top: 164px;
-      width: 42px;
-      height: 42px;
-      border-radius: 7px 0 0 7px;
-      background: #65a9e8;
+      top: 176px;
+      width: 40px;
+      height: 40px;
+      border-radius: 6px 0 0 6px;
+      background: var(--primary);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 2px 8px rgba(52, 118, 176, .24);
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(22, 119, 255, .28);
     }
   </style>
 </head>
@@ -362,24 +400,24 @@
 
   <div class="layout">
     <aside class="sidebar">
-      <div class="side-icon">⌂</div>
+      <div class="side-icon active">⌂</div>
       <div class="side-icon">▣</div>
-      <div class="side-icon">▥</div>
       <div class="side-icon">▤</div>
-      <div class="side-icon">◔</div>
-      <div class="side-icon">▌</div>
-      <div class="side-icon">●</div>
-      <div class="side-icon">▌</div>
-      <div class="side-icon">◔</div>
-      <div class="side-icon">▌</div>
+      <div class="side-icon">▥</div>
+      <div class="side-icon">◉</div>
+      <div class="side-icon">▦</div>
+      <div class="side-icon">◌</div>
+      <div class="side-icon">▣</div>
+      <div class="side-icon">◍</div>
+      <div class="side-icon">▥</div>
     </aside>
 
     <main class="content">
-      <section class="panel">
+      <section class="card filter-card">
         <div class="biz-tabs">
           <button class="biz-tab">借物出库</button>
           <button class="biz-tab">报损出库</button>
-          <button class="biz-tab repair active">返修出库</button>
+          <button class="biz-tab active">返修出库</button>
         </div>
 
         <div class="state-tabs">
@@ -387,7 +425,7 @@
           <div class="state-tab">待审核 (0)</div>
           <div class="state-tab">待仓库作业 (0)</div>
           <div class="state-tab">已出库 (8)</div>
-          <div class="state-tab active">待归还 (21)</div>
+          <div class="state-tab active">返修中 (21)</div>
           <div class="state-tab">异常 (0)</div>
           <div class="state-tab">已完成 (2)</div>
           <div class="state-tab">审核拒绝 (0)</div>
@@ -400,18 +438,17 @@
           <input class="input" placeholder="请输入" />
           <select class="select"><option>请选择创建人</option><option>张晶</option><option>李静</option></select>
           <select class="select"><option>请选择审核状态</option><option>待审核</option><option>审核通过</option></select>
-          <select class="select"><option>是否需归还</option><option>是</option><option>否</option></select>
-          <select class="select"><option>归还状态</option><option>待归还</option><option>部分归还</option><option>已归还</option></select>
+          <select class="select"><option>返修状态</option><option>返修中</option><option>已完成</option><option>异常</option></select>
           <select class="select"><option>创建时间</option><option>更新时间</option></select>
           <div class="date-range"><input placeholder="开始日期" /><span>-</span><input placeholder="结束日期" /></div>
           <button class="btn primary">搜索</button>
-          <button class="btn gray">重置</button>
+          <button class="btn">重置</button>
         </div>
       </section>
 
-      <section class="table-panel">
+      <section class="card table-card">
         <div class="toolbar">
-          <button class="btn">新建返修出库</button>
+          <button class="btn primary">新建返修出库</button>
           <button class="btn danger-light">取消</button>
         </div>
 
@@ -453,11 +490,11 @@
 
   <script>
     const rows = [
-      { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', repair:'待归还', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
-      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', repair:'待归还', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
-      { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', repair:'待归还', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
-      { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', repair:'待归还', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
-      { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', repair:'待归还', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
+      { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', status:'返修中', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
+      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', status:'返修中', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
+      { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', status:'返修中', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
+      { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', status:'返修中', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
+      { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', status:'返修中', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
     ];
 
     const body = document.querySelector('#tableBody');
@@ -468,7 +505,7 @@
           单号：<a class="link">${row.no}</a><br>
           出库单号：${row.out}<br>
           关联单号：-<br>
-          <span class="tag">需归还</span><span class="tag active">${row.repair}</span>
+          <span class="status-tag">${row.status}</span>
         </td>
         <td>返修出库</td>
         <td>出库仓库：${row.warehouse}<br>出库时间：${row.time}</td>
@@ -485,7 +522,7 @@
         <td>创建人：张晶<br>创建时间：${row.create}<br>更新人：张晶<br>更新时间：${row.update}</td>
         <td class="action-col">
           <a class="link">查看</a><br>
-          <a class="link">返修</a><br>
+          <a class="link">归还</a><br>
           <a class="link-danger">报损</a><br>
           <a class="link">日志</a>
         </td>
