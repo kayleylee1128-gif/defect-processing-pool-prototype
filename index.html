@@ -1,538 +1,228 @@
-<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>次品处理池原型</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #f5f7fb;
-      color: #1f2937;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-      font-size: 14px;
-    }
-    button, input, select { font: inherit; }
-    .page { min-height: 100vh; padding: 24px; }
-    .header {
-      display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;
-      padding: 22px 24px; margin-bottom: 16px; background: #fff;
-      border: 1px solid #e5e7eb; border-radius: 8px;
-    }
-    .title { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; font-size: 24px; }
-    .desc, .muted { color: #6b7280; }
-    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
-    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px; }
-    .card-label { color: #6b7280; margin-bottom: 8px; }
-    .card-value { font-size: 26px; font-weight: 650; }
-    .toolbar {
-      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-      padding: 14px 16px; margin-bottom: 12px; background: #fff;
-      border: 1px solid #e5e7eb; border-radius: 8px;
-    }
-    .input, .select {
-      height: 34px; border: 1px solid #d9d9d9; border-radius: 6px;
-      padding: 0 11px; background: #fff; min-width: 200px;
-    }
-    .btn {
-      height: 34px; border: 1px solid #d9d9d9; border-radius: 6px;
-      background: #fff; color: #1f2937; padding: 0 14px; cursor: pointer;
-    }
-    .btn:hover { border-color: #1677ff; color: #1677ff; }
-    .btn-primary { color: #fff; background: #1677ff; border-color: #1677ff; }
-    .btn-primary:hover { color: #fff; background: #4096ff; border-color: #4096ff; }
-    .btn-danger { color: #fff; background: #ff4d4f; border-color: #ff4d4f; }
-    .btn-link { border: 0; background: transparent; color: #1677ff; padding: 0; height: auto; }
-    .btn-text { border: 0; background: transparent; color: #1677ff; }
-    .table-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 920px; }
-    th, td { height: 52px; padding: 0 16px; border-bottom: 1px solid #f0f0f0; text-align: left; white-space: nowrap; }
-    th { height: 44px; background: #fafafa; color: #6b7280; font-weight: 600; }
-    tr:hover td { background: #fafcff; }
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .actions { text-align: right; }
-    .sku-main { font-weight: 650; }
-    .sku-sub { color: #6b7280; font-size: 13px; margin-top: 2px; }
-    .tag {
-      display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
-      border-radius: 4px; font-size: 12px; border: 1px solid #91caff; color: #1677ff; background: #e6f4ff;
-    }
-    .tag-red { color: #cf1322; background: #fff1f0; border-color: #ffa39e; }
-    .tag-green { color: #389e0d; background: #f6ffed; border-color: #b7eb8f; }
-    .tag-gray { color: #6b7280; background: #f3f4f6; border-color: #e5e7eb; }
-    .mask {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, .45);
-      display: none; z-index: 20;
-    }
-    .mask.show { display: block; }
-    .modal, .drawer {
-      position: fixed; background: #fff; display: none; z-index: 21;
-      box-shadow: 0 6px 24px rgba(0,0,0,.16);
-    }
-    .modal.show, .drawer.show { display: block; }
-    .modal {
-      width: min(920px, calc(100vw - 48px)); max-height: calc(100vh - 72px);
-      left: 50%; top: 50%; transform: translate(-50%, -50%);
-      border-radius: 8px; overflow: hidden;
-    }
-    .drawer { width: min(560px, 92vw); right: 0; top: 0; height: 100vh; }
-    .modal-head, .drawer-head {
-      height: 56px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; border-bottom: 1px solid #f0f0f0; font-size: 16px; font-weight: 650;
-    }
-    .modal-body, .drawer-body { padding: 20px; overflow: auto; max-height: calc(100vh - 160px); }
-    .drawer-body { max-height: calc(100vh - 116px); }
-    .modal-foot, .drawer-foot {
-      display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px;
-      border-top: 1px solid #f0f0f0; background: #fff;
-    }
-    .close { border: 0; background: transparent; font-size: 22px; color: #6b7280; cursor: pointer; }
-    .desc-grid {
-      display: grid; grid-template-columns: 120px 1fr 120px 1fr;
-      border: 1px solid #f0f0f0; border-bottom: 0; border-right: 0;
-    }
-    .desc-grid div { min-height: 40px; padding: 10px 12px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
-    .desc-grid .label { background: #fafafa; color: #6b7280; }
-    .rule-toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; }
-    .condition-group { border: 1px solid #d9e1ec; border-radius: 8px; padding: 18px; margin-bottom: 14px; background: #fff; }
-    .condition-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .condition-head-left { display: flex; align-items: center; gap: 12px; }
-    .condition-row { display: grid; grid-template-columns: 188px minmax(260px, 1fr) 116px 36px; gap: 10px; margin-bottom: 14px; align-items: center; }
-    .condition-type { border-color: #1677ff; color: #1f2937; }
-    .sku-value-wrap { position: relative; }
-    .sku-value-wrap::after {
-      content: "⌄"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      color: #b8c0cc; pointer-events: none;
-    }
-    .sku-value { width: 100%; padding-right: 34px; color: #1f2937; }
-    .sku-value::placeholder { color: #b8c0cc; }
-    .import-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-    .delete-icon {
-      width: 34px; height: 34px; border: 0; background: transparent; color: #b8c0cc;
-      cursor: pointer; font-size: 20px; border-radius: 6px;
-    }
-    .delete-icon:hover { background: #f5f7fb; color: #ff4d4f; }
-    .add-condition { min-width: 150px; color: #4b5563; }
-    .radio-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .radio-row label { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: 6px; cursor: pointer; }
-    .hint { margin-top: 8px; padding: 10px 12px; border: 1px solid #ffd591; background: #fff7e6; border-radius: 6px; color: #6b7280; line-height: 1.7; }
-    .discard-note { display: none; margin-top: 8px; padding: 12px; border: 1px solid #ffa39e; background: #fff1f0; border-radius: 6px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-    .field { display: grid; gap: 6px; }
-    .toast {
-      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-      display: none; padding: 9px 16px; background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 6px; box-shadow: 0 4px 18px rgba(0,0,0,.12); z-index: 30;
-    }
-    .toast.show { display: block; }
-    .empty { text-align: center; padding: 40px; color: #9ca3af; }
-    @media (max-width: 760px) {
-      .page { padding: 14px; }
-      .header, .rule-toolbar { flex-direction: column; align-items: stretch; }
-      .cards, .form-row, .condition-row, .desc-grid { grid-template-columns: 1fr; }
-      .input, .select { min-width: 0; width: 100%; }
-    }
-  </style>
+  <title>次品待处理原型</title>
+  <link rel="stylesheet" href="./assets/tokens.css" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <main class="page">
-    <section class="header">
-      <div>
-        <h1 class="title">次品处理池</h1>
-        <div class="desc">按 SKU + 供应商聚合次品库存，快速查看来源并设置返修或报损方案。</div>
+  <div class="c-shell" data-component="ErpShell" data-collapsed="false">
+    <aside class="c-shell__sider" aria-label="主导航">
+      <div class="c-shell__brand">
+        <span class="c-shell__brand-logo">E</span>
+        <span class="c-shell__brand-text">ERP 后台</span>
       </div>
-      <button class="btn" id="openConfig">次品配置</button>
-    </section>
+      <ul class="c-shell__menu" role="menu">
+        <li class="c-shell__menu-group">采购</li>
+        <li class="c-shell__menu-item c-shell__menu-item--active" role="menuitem">
+          <span class="c-shell__menu-icon">P</span>
+          <span>次品待处理</span>
+        </li>
+      </ul>
+    </aside>
 
-    <section class="cards">
-      <div class="card"><div class="card-label">待处理 SKU + 供应商组合</div><div class="card-value" id="statSku">4 组</div></div>
-      <div class="card"><div class="card-label">待处理次品数量</div><div class="card-value" id="statQty">267 件</div></div>
-      <div class="card"><div class="card-label">待处理总成本</div><div class="card-value" id="statCost">¥252,340</div></div>
-    </section>
-
-    <section class="toolbar">
-      <strong>筛选</strong>
-      <input class="input" id="filterSku" placeholder="按 SKU 查询" />
-      <input class="input" id="filterSupplier" placeholder="按供应商查询" />
-      <input class="input" id="filterWarehouse" placeholder="按仓库查询" />
-      <button class="btn" id="resetFilter">重置</button>
-    </section>
-
-    <section class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>SKU</th><th>供应商</th><th>仓库</th><th class="num">次品数量</th>
-            <th class="num">次品总成本</th><th class="num">平均单价</th><th>状态</th><th class="actions">操作</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </section>
-  </main>
-
-  <div class="mask" id="mask"></div>
-  <section class="modal" id="configModal">
-    <div class="modal-head"><span>次品配置规则</span><button class="close" data-close>×</button></div>
-    <div class="modal-body">
-      <div class="rule-toolbar">
-        <span class="muted">规则之间按优先级命中；条件组之间为 OR，组内条件为 AND。</span>
-        <button class="btn btn-primary" id="addRule">新增规则</button>
+    <header class="c-shell__header">
+      <button class="c-icon-btn" title="折叠菜单" data-action="collapse" type="button">≡</button>
+      <div class="c-shell__header-search">
+        <span class="c-shell__header-search-icon">⌕</span>
+        <input class="input" data-field="global-search" placeholder="搜索供应商、SKU、退货单" />
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>规则名称</th><th>优先级</th><th>触发规则</th><th>收货指引</th><th>状态</th><th class="actions">操作</th></tr></thead>
-          <tbody id="ruleBody"></tbody>
+      <div class="c-shell__header-actions">
+        <button class="c-icon-btn" title="帮助" type="button">?</button>
+        <button class="c-icon-btn" title="通知" type="button">!</button>
+        <div class="c-shell__avatar" title="采购用户">采</div>
+      </div>
+    </header>
+
+    <nav class="c-shell__crumb" aria-label="面包屑">
+      <a href="#">工作台</a>
+      <span class="c-shell__crumb-sep">/</span>
+      <span>采购</span>
+      <span class="c-shell__crumb-sep">/</span>
+      <span class="c-shell__crumb-current">次品待处理</span>
+    </nav>
+
+    <main class="c-shell__content">
+      <header class="c-page-header" data-component="PageHeaderBar">
+        <div>
+          <h1 class="c-page-header__title">
+            次品待处理
+            <span class="c-page-header__title-extra">采购处理</span>
+          </h1>
+          <p class="c-page-header__desc">上架到次品区后的次品库存按供应商 + SKU 聚合。采购在此确认返修或报损处理方案。</p>
+        </div>
+        <div class="c-page-header__actions">
+          <button class="btn" data-action="open-config" type="button">次品处理配置</button>
+        </div>
+      </header>
+
+      <section class="c-filter" data-component="QueryFilterBar">
+        <div class="c-filter__row">
+          <label class="c-filter__field">
+            <span class="c-filter__label">供应商</span>
+            <div class="c-select" data-select="supplier" data-value="">
+              <button class="c-select__trigger" type="button" data-action="toggle-select">全部供应商</button>
+              <div class="c-select__menu">
+                <button class="c-select__option c-select__option--active" type="button" data-value="">全部供应商</button>
+                <button class="c-select__option" type="button" data-value="深圳启明电子">深圳启明电子</button>
+                <button class="c-select__option" type="button" data-value="杭州品越家居">杭州品越家居</button>
+                <button class="c-select__option" type="button" data-value="宁波远拓工具">宁波远拓工具</button>
+              </div>
+            </div>
+          </label>
+          <label class="c-filter__field">
+            <span class="c-filter__label">SKU</span>
+            <input class="input" data-field="sku-filter" placeholder="输入 SKU" />
+          </label>
+          <label class="c-filter__field">
+            <span class="c-filter__label">仓库</span>
+            <div class="c-select" data-select="warehouse" data-value="">
+              <button class="c-select__trigger" type="button" data-action="toggle-select">全部仓库</button>
+              <div class="c-select__menu">
+                <button class="c-select__option c-select__option--active" type="button" data-value="">全部仓库</button>
+                <button class="c-select__option" type="button" data-value="华东一仓">华东一仓</button>
+                <button class="c-select__option" type="button" data-value="华南二仓">华南二仓</button>
+                <button class="c-select__option" type="button" data-value="华北仓">华北仓</button>
+              </div>
+            </div>
+          </label>
+          <div class="c-filter__field c-filter__actions">
+            <button class="btn" data-action="reset-filter" type="button">重置</button>
+            <button class="btn btn--primary" data-action="query-filter" type="button">查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="c-table-panel" data-component="DataTablePanel">
+        <div class="c-table-panel__toolbar">
+          <div class="c-table-panel__summary" data-role="table-summary">待处理聚合 <strong>3</strong> 组，采购成本合计 <strong>¥12,676.00</strong></div>
+          <div class="c-table-panel__tools">
+            <button class="btn btn--sm" type="button">导出当前结果</button>
+          </div>
+        </div>
+        <table class="c-table">
+          <thead>
+            <tr>
+              <th>供应商</th>
+              <th>SKU</th>
+              <th>仓库</th>
+              <th class="c-table__cell--num">次品数量</th>
+              <th class="c-table__cell--num">采购成本金额</th>
+              <th>最早上架时间</th>
+              <th class="c-table__cell--actions">操作</th>
+            </tr>
+          </thead>
+          <tbody data-role="pending-body">
+            <tr data-row="pending" data-defective-qty="46" data-total-cost="3128" data-supplier="深圳启明电子" data-sku="SKU-BAT-8842" data-warehouse="华东一仓">
+              <td>深圳启明电子</td>
+              <td><a class="link" data-action="open-pending-detail">SKU-BAT-8842</a></td>
+              <td>华东一仓</td>
+              <td class="c-table__cell--num">46</td>
+              <td class="c-table__cell--num">¥3,128.00</td>
+              <td>2026-05-20 15:12</td>
+              <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
+            </tr>
+            <tr data-row="pending" data-defective-qty="14" data-total-cost="2520" data-supplier="杭州品越家居" data-sku="SKU-PAD-7710" data-warehouse="华东一仓">
+              <td>杭州品越家居</td>
+              <td><a class="link" data-action="open-pending-detail">SKU-PAD-7710</a></td>
+              <td>华东一仓</td>
+              <td class="c-table__cell--num">14</td>
+              <td class="c-table__cell--num">¥2,520.00</td>
+              <td>2026-05-18 09:40</td>
+              <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
+            </tr>
+            <tr data-row="pending" data-defective-qty="31" data-total-cost="7028" data-supplier="宁波远拓工具" data-sku="SKU-TOOL-5571" data-warehouse="华北仓">
+              <td>宁波远拓工具</td>
+              <td><a class="link" data-action="open-pending-detail">SKU-TOOL-5571</a></td>
+              <td>华北仓</td>
+              <td class="c-table__cell--num">31</td>
+              <td class="c-table__cell--num">¥7,028.00</td>
+              <td>2026-05-17 11:26</td>
+              <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
+            </tr>
+            <tr class="empty-row" data-role="empty-row" hidden>
+              <td colspan="7">
+                <div class="empty-state">暂无符合条件的次品待处理数据</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <div class="c-drawer-mask" data-action="close-drawer"></div>
+  <aside class="c-drawer" data-component="DetailDrawer" data-open="false" role="dialog" aria-labelledby="drawer-title">
+    <div class="c-drawer__head">
+      <h2 class="c-drawer__title" id="drawer-title">次品待处理详情</h2>
+      <button class="c-icon-btn" data-action="close-drawer" title="关闭" type="button">×</button>
+    </div>
+    <div class="c-drawer__meta">
+      <span class="tag tag--warning">次品库存</span>
+      <span>采购成本 <strong>¥3,128.00</strong></span>
+      <span>待采购处理</span>
+    </div>
+    <nav class="c-drawer__tabs">
+      <button class="c-drawer__tab" aria-selected="true" data-tab="basic" type="button">基础信息</button>
+      <button class="c-drawer__tab" aria-selected="false" data-tab="stock" type="button">库存来源</button>
+      <button class="c-drawer__tab" aria-selected="false" data-tab="log" type="button">操作日志</button>
+    </nav>
+    <div class="c-drawer__body">
+      <div data-tab-pane="basic">
+        <h3 class="c-section-title">供应商 + SKU 聚合</h3>
+        <dl class="c-desc">
+          <dt>供应商</dt><dd>深圳启明电子</dd>
+          <dt>SKU</dt><dd>SKU-BAT-8842</dd>
+          <dt>仓库</dt><dd>华东一仓</dd>
+          <dt>次品数量</dt><dd>46</dd>
+          <dt>采购成本</dt><dd>¥68.00 / 件</dd>
+          <dt>成本金额</dt><dd>¥3,128.00</dd>
+        </dl>
+      </div>
+      <div data-tab-pane="stock" hidden>
+        <table class="c-table">
+          <thead>
+            <tr><th>退货收货单</th><th>上架时间</th><th class="c-table__cell--num">数量</th><th class="c-table__cell--num">采购成本</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RT-IN-20260520-0089</td><td>2026-05-20 15:12</td><td class="c-table__cell--num">12</td><td class="c-table__cell--num">¥816.00</td></tr>
+            <tr><td>RT-IN-20260521-0034</td><td>2026-05-21 11:30</td><td class="c-table__cell--num">18</td><td class="c-table__cell--num">¥1,224.00</td></tr>
+            <tr><td>RT-IN-20260522-0017</td><td>2026-05-22 09:14</td><td class="c-table__cell--num">16</td><td class="c-table__cell--num">¥1,088.00</td></tr>
+          </tbody>
         </table>
       </div>
-    </div>
-    <div class="modal-foot"><button class="btn" data-close>关闭</button></div>
-  </section>
-
-  <section class="modal" id="ruleModal">
-    <div class="modal-head"><span id="ruleTitle">新增次品配置规则</span><button class="close" data-close>×</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <label class="field">规则名称<input class="input" id="ruleName" placeholder="请输入规则名称" /></label>
-        <label class="field">优先级<input class="input" id="rulePriority" type="number" min="1" max="99" value="5" /></label>
-      </div>
-      <h3>触发规则</h3>
-      <div id="conditionGroups"></div>
-      <button class="btn btn-text" id="addGroup">+ 添加条件组 (OR)</button>
-      <div class="form-row">
-        <label class="field">收货指引结果
-          <select class="select" id="ruleAction">
-            <option value="上架至次品区">上架至次品区</option>
-            <option value="当场丢弃">当场丢弃</option>
-          </select>
-        </label>
-        <label class="field">状态
-          <select class="select" id="ruleStatus">
-            <option value="启用">启用</option>
-            <option value="停用">停用</option>
-          </select>
-        </label>
+      <div data-tab-pane="log" hidden>
+        <ul class="c-timeline">
+          <li class="c-timeline__item">
+            <div class="c-timeline__time">2026-05-22 09:14:22</div>
+            <div class="c-timeline__title">次品区库存新增</div>
+            <div class="c-timeline__detail">仓库质检为次品后按配置上架到次品区，库存属性为不可用。</div>
+          </li>
+        </ul>
       </div>
     </div>
-    <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="saveRule">保存规则</button></div>
+    <footer class="c-drawer__foot">
+      <button class="btn" data-action="close-drawer" type="button">关闭</button>
+    </footer>
+  </aside>
+
+  <div class="c-modal-mask" data-action="close-modal"></div>
+  <section class="c-modal c-modal--wide" data-component="CreateModal" data-open="false" role="dialog" aria-labelledby="modal-title">
+    <header class="c-modal__head">
+      <h2 id="modal-title">弹窗</h2>
+      <button class="c-icon-btn" data-action="close-modal" title="关闭" type="button">×</button>
+    </header>
+    <div class="c-modal__body" id="modal-body"></div>
+    <footer class="c-modal__foot">
+      <button class="btn" data-action="close-modal" type="button">取消</button>
+      <button class="btn btn--primary" data-action="confirm-modal" type="button">确认</button>
+    </footer>
   </section>
 
-  <section class="drawer" id="sourceDrawer">
-    <div class="drawer-head"><span>数据来源明细</span><button class="close" data-close>×</button></div>
-    <div class="drawer-body" id="sourceBody"></div>
-    <div class="drawer-foot"><button class="btn" data-close>关闭</button></div>
-  </section>
-
-  <section class="drawer" id="solutionDrawer">
-    <div class="drawer-head"><span>设置处理方案</span><button class="close" data-close>×</button></div>
-    <div class="drawer-body" id="solutionBody"></div>
-    <div class="drawer-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="confirmSolution">确认方案</button></div>
-  </section>
-
-  <section class="modal" id="warnModal">
-    <div class="modal-head"><span>返修成本偏高，请确认最终处理方案</span><button class="close" data-close>×</button></div>
-    <div class="modal-body" id="warnBody"></div>
-    <div class="modal-foot"><button class="btn" data-close>取消</button><button class="btn btn-primary" id="finalRepair">确认返修</button><button class="btn btn-danger" id="finalScrap">报损</button></div>
-  </section>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const rows = [
-      { id:'POOL-001', sku:'SKU-ALPHA-001', productName:'智能门锁主板', supplier:'深圳启明电子', warehouse:'华东退件仓', quantity:86, totalCost:142800, avgPrice:1660.47, status:'待处理', sources:[['RTN20260529001','客户退件',24,'外壳破损'],['RTN20260530017','售后退件',42,'功能异常'],['RTN20260531008','渠道退件',20,'包装污染']] },
-      { id:'POOL-002', sku:'SKU-BETA-118', productName:'便携储能电芯', supplier:'宁波辰禾能源', warehouse:'华南退件仓', quantity:38, totalCost:32680, avgPrice:860, status:'待处理', sources:[['RTN20260528031','仓内质检',18,'电压异常'],['RTN20260531014','客户退件',20,'外观划伤']] },
-      { id:'POOL-003', sku:'SKU-GAMMA-320', productName:'无线温控器', supplier:'苏州松岭科技', warehouse:'华东退件仓', quantity:124, totalCost:23560, avgPrice:190, status:'待处理', sources:[['RTN20260527004','客户退件',51,'屏幕暗斑'],['RTN20260530022','平台退件',73,'配件缺失']] },
-      { id:'POOL-004', sku:'SKU-DELTA-056', productName:'工业摄像头', supplier:'杭州图灵视觉', warehouse:'华北退件仓', quantity:19, totalCost:51300, avgPrice:2700, status:'待处理', sources:[['RTN20260531019','售后退件',19,'镜头进尘']] }
-    ];
-    let rules = [
-      { id:'RULE-001', name:'高货值电子件入次品区', priority:5, status:'启用', action:'上架至次品区', summary:'SKU 类目 = 电子件 且 货值区间 >= ¥10,000' },
-      { id:'RULE-002', name:'低单价破损件当场丢弃', priority:8, status:'启用', action:'当场丢弃', summary:'单价区间 0-50 且 次品原因 = 外观破损' },
-      { id:'RULE-003', name:'指定 SKU 返修池规则', priority:3, status:'停用', action:'上架至次品区', summary:'SKU in SKU-ALPHA-001、SKU-DELTA-056' }
-    ];
-    let currentRow = null;
-    let warnState = null;
-    let editingRuleId = '';
-    let conditionGroups = [[{ field: 'SKU', value: '' }]];
-
-    const money = v => '¥' + Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
-    const qs = s => document.querySelector(s);
-    const showToast = text => { const el = qs('#toast'); el.textContent = text; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1800); };
-    const openLayer = id => { qs('#mask').classList.add('show'); qs(id).classList.add('show'); };
-    const closeLayers = () => { document.querySelectorAll('.show').forEach(el => el.classList.remove('show')); };
-
-    function renderTable() {
-      const filters = {
-        sku: qs('#filterSku').value.trim().toLowerCase(),
-        supplier: qs('#filterSupplier').value.trim().toLowerCase(),
-        warehouse: qs('#filterWarehouse').value.trim().toLowerCase()
-      };
-      const filtered = rows.filter(r =>
-        (!filters.sku || r.sku.toLowerCase().includes(filters.sku)) &&
-        (!filters.supplier || r.supplier.toLowerCase().includes(filters.supplier)) &&
-        (!filters.warehouse || r.warehouse.toLowerCase().includes(filters.warehouse))
-      );
-      qs('#statSku').textContent = filtered.length + ' 组';
-      qs('#statQty').textContent = filtered.reduce((a, r) => a + r.quantity, 0) + ' 件';
-      qs('#statCost').textContent = money(filtered.reduce((a, r) => a + r.totalCost, 0));
-      qs('#tableBody').innerHTML = filtered.length ? filtered.map(r => `
-        <tr>
-          <td><div class="sku-main">${r.sku}</div><div class="sku-sub">${r.productName}</div></td>
-          <td>${r.supplier}</td><td>${r.warehouse}</td>
-          <td class="num"><button class="btn-link" onclick="openSource('${r.id}')">${r.quantity}</button></td>
-          <td class="num">${money(r.totalCost)}</td><td class="num">${money(r.avgPrice)}</td>
-          <td><span class="tag">${r.status}</span></td>
-          <td class="actions"><button class="btn btn-primary" onclick="openSolution('${r.id}')">设置方案</button></td>
-        </tr>
-      `).join('') : '<tr><td colspan="8"><div class="empty">暂无次品处理池数据</div></td></tr>';
-    }
-
-    function renderRules() {
-      qs('#ruleBody').innerHTML = rules.map(r => `
-        <tr>
-          <td>${r.name}</td><td>${r.priority}</td><td class="muted">${r.summary}</td>
-          <td><span class="tag ${r.action === '当场丢弃' ? 'tag-red' : ''}">${r.action}</span></td>
-          <td><span class="tag ${r.status === '启用' ? 'tag-green' : 'tag-gray'}">${r.status}</span></td>
-          <td class="actions"><button class="btn-link" onclick="openRuleEditor('${r.id}')">编辑</button></td>
-        </tr>
-      `).join('');
-    }
-
-    window.openSource = id => {
-      const r = rows.find(x => x.id === id);
-      qs('#sourceBody').innerHTML = `
-        <div class="desc-grid">
-          <div class="label">SKU</div><div>${r.sku}</div><div class="label">供应商</div><div>${r.supplier}</div>
-          <div class="label">当前数量</div><div>${r.quantity}</div><div class="label">次品总成本</div><div>${money(r.totalCost)}</div>
-        </div>
-        <h3>来源单据</h3>
-        <div class="table-wrap"><table><thead><tr><th>来源单据</th><th>来源</th><th class="num">数量</th><th>原因</th></tr></thead><tbody>
-          ${r.sources.map(s => `<tr><td>${s[0]}</td><td>${s[1]}</td><td class="num">${s[2]}</td><td>${s[3]}</td></tr>`).join('')}
-        </tbody></table></div>`;
-      openLayer('#sourceDrawer');
-    };
-
-    window.openSolution = id => {
-      currentRow = rows.find(x => x.id === id);
-      qs('#solutionBody').innerHTML = `
-        <div class="desc-grid">
-          <div class="label">SKU</div><div>${currentRow.sku}</div><div class="label">供应商</div><div>${currentRow.supplier}</div>
-          <div class="label">次品数量</div><div>${currentRow.quantity}</div><div class="label">总成本</div><div>${money(currentRow.totalCost)}</div>
-        </div>
-        <div style="margin-top:18px">
-          <div class="field"><span>是否返修</span>
-            <div class="radio-row">
-              <label><input type="radio" name="repair" value="yes" checked> 是，返修</label>
-              <label><input type="radio" name="repair" value="no"> 否，报损</label>
-            </div>
-          </div>
-          <div id="repairFields" class="form-row">
-            <label class="field">返修数量<input class="input" id="repairQty" type="number" min="1" max="${currentRow.quantity}" value="${currentRow.quantity}"></label>
-            <label class="field">返修成本<input class="input" id="repairCost" type="number" min="0" value="0"></label>
-          </div>
-          <div id="repairPlanFields" class="form-row">
-            <label class="field">返修方案
-              <select class="select" id="repairPlan">
-                <option value="返修入库">返修入库</option>
-                <option value="返修换货">返修换货</option>
-              </select>
-            </label>
-          </div>
-          <div id="exchangeFields" class="form-row" style="display:none">
-            <label class="field">更换后SKU<input class="input" id="exchangeSku" placeholder="请输入更换后SKU"></label>
-            <label class="field">更换后数量<input class="input" id="exchangeQty" type="number" min="1" max="${currentRow.quantity}" value="${currentRow.quantity}"></label>
-          </div>
-          <div class="hint" id="repairHint">若成本大于1000，返修成本占总成本80%以上，不建议返修；若成本小于1000，返修成本占总成本60%以上，不建议返修</div>
-          <div class="discard-note" id="discardNote">将让仓库对次品全部报损丢弃</div>
-        </div>`;
-      document.querySelectorAll('input[name="repair"]').forEach(el => el.addEventListener('change', updateRepairMode));
-      qs('#repairPlan').addEventListener('change', updateRepairPlanMode);
-      openLayer('#solutionDrawer');
-    };
-
-    function updateRepairMode() {
-      const repair = document.querySelector('input[name="repair"]:checked').value === 'yes';
-      qs('#repairFields').style.display = repair ? 'grid' : 'none';
-      qs('#repairPlanFields').style.display = repair ? 'grid' : 'none';
-      qs('#repairHint').style.display = repair ? 'block' : 'none';
-      qs('#discardNote').style.display = repair ? 'none' : 'block';
-      if (!repair) qs('#exchangeFields').style.display = 'none';
-      if (repair) updateRepairPlanMode();
-    }
-
-    function updateRepairPlanMode() {
-      const plan = qs('#repairPlan').value;
-      qs('#exchangeFields').style.display = plan === '返修换货' ? 'grid' : 'none';
-    }
-
-    function submitSolution() {
-      if (!currentRow) return;
-      const repair = document.querySelector('input[name="repair"]:checked').value === 'yes';
-      if (!repair) { closeLayers(); showToast('已设置为全部报损丢弃'); return; }
-      const qty = Number(qs('#repairQty').value);
-      const cost = Number(qs('#repairCost').value);
-      const plan = qs('#repairPlan').value;
-      if (!qty || qty < 1 || qty > currentRow.quantity) { showToast('返修数量需大于 0 且不超过当前次品数量'); return; }
-      if (Number.isNaN(cost) || cost < 0) { showToast('返修成本需大于等于 0'); return; }
-      if (plan === '返修换货') {
-        const exchangeSku = qs('#exchangeSku').value.trim();
-        const exchangeQty = Number(qs('#exchangeQty').value);
-        if (!exchangeSku) { showToast('请填写更换后SKU'); return; }
-        if (!exchangeQty || exchangeQty < 1) { showToast('更换后数量需大于 0'); return; }
-      }
-      const ratio = cost / currentRow.totalCost * 100;
-      const threshold = cost > 1000 ? 80 : 60;
-      if (ratio >= threshold) {
-        warnState = { ratio, threshold, plan };
-        qs('#warnBody').innerHTML = `<span class="tag">返修成本占总成本 ${ratio.toFixed(2)}%</span><p>返修成本占总成本 ${ratio.toFixed(2)}%，大于${threshold}%，不建议返修，请确认最终处理方案。</p>`;
-        openLayer('#warnModal');
-        return;
-      }
-      closeLayers(); showToast(`已确认${plan}，返修申请已生成`);
-    }
-
-    function conditionValueHtml(condition, groupIndex, conditionIndex) {
-      if (condition.field === 'SKU') {
-        return `
-          <div class="sku-value-wrap">
-            <input class="input sku-value" value="${condition.value || ''}" placeholder="输入SKU，回车添加"
-              oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)"
-              onkeydown="handleSkuEnter(event, ${groupIndex}, ${conditionIndex})">
-          </div>
-          <button class="btn import-btn" type="button" onclick="batchImportSku(${groupIndex}, ${conditionIndex})">↥ 批量导入</button>
-        `;
-      }
-      if (condition.field === '单价区间' || condition.field === '货值区间') {
-        return `
-          <input class="input" value="${condition.value || ''}" placeholder="输入区间，如 50-200"
-            oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)">
-          <span></span>
-        `;
-      }
-      return `
-        <input class="input" value="${condition.value || ''}" placeholder="请选择或输入具体值"
-          oninput="updateCondition(${groupIndex}, ${conditionIndex}, 'value', this.value)">
-        <span></span>
-      `;
-    }
-
-    function renderConditionGroups() {
-      qs('#conditionGroups').innerHTML = conditionGroups.map((group, groupIndex) => `
-        <div class="condition-group">
-          <div class="condition-head">
-            <div class="condition-head-left">
-              <span class="tag">条件组 ${groupIndex + 1}</span>
-              <span class="muted">组内条件需全部满足 (AND)</span>
-            </div>
-            <button class="btn btn-text" type="button" onclick="removeConditionGroup(${groupIndex})">▥ 删除组</button>
-          </div>
-          ${group.map((condition, conditionIndex) => `
-            <div class="condition-row">
-              <select class="select condition-type" onchange="updateCondition(${groupIndex}, ${conditionIndex}, 'field', this.value)">
-                ${['SKU', '仓库', '单价区间', '货值区间', '次品原因'].map(option => `<option ${condition.field === option ? 'selected' : ''}>${option}</option>`).join('')}
-              </select>
-              ${conditionValueHtml(condition, groupIndex, conditionIndex)}
-              <button class="delete-icon" type="button" title="删除条件" onclick="removeCondition(${groupIndex}, ${conditionIndex})">▥</button>
-            </div>
-          `).join('')}
-          <button class="btn add-condition" type="button" onclick="addCondition(${groupIndex})">＋ 添加条件 (AND)</button>
-        </div>
-      `).join('');
-    }
-
-    window.updateCondition = (groupIndex, conditionIndex, key, value) => {
-      conditionGroups[groupIndex][conditionIndex][key] = value;
-      if (key === 'field') {
-        conditionGroups[groupIndex][conditionIndex].value = value === 'SKU' ? '' : '';
-        renderConditionGroups();
-      }
-    };
-
-    window.addCondition = groupIndex => {
-      conditionGroups[groupIndex].push({ field: 'SKU', value: '' });
-      renderConditionGroups();
-    };
-
-    window.removeCondition = (groupIndex, conditionIndex) => {
-      if (conditionGroups[groupIndex].length <= 1) {
-        showToast('每个条件组至少保留一个条件');
-        return;
-      }
-      conditionGroups[groupIndex].splice(conditionIndex, 1);
-      renderConditionGroups();
-    };
-
-    window.removeConditionGroup = groupIndex => {
-      if (conditionGroups.length <= 1) {
-        showToast('至少保留一个条件组');
-        return;
-      }
-      conditionGroups.splice(groupIndex, 1);
-      renderConditionGroups();
-    };
-
-    window.addConditionGroup = () => {
-      conditionGroups.push([{ field: 'SKU', value: '' }]);
-      renderConditionGroups();
-    };
-
-    window.batchImportSku = (groupIndex, conditionIndex) => {
-      conditionGroups[groupIndex][conditionIndex].value = 'SKU-ALPHA-001, SKU-DELTA-056';
-      renderConditionGroups();
-      showToast('已导入 2 个固定 SKU');
-    };
-
-    window.handleSkuEnter = (event, groupIndex, conditionIndex) => {
-      if (event.key !== 'Enter') return;
-      event.preventDefault();
-      const value = event.target.value.trim();
-      if (!value) return;
-      conditionGroups[groupIndex][conditionIndex].value = value.includes(',') ? value : `${value}, `;
-      renderConditionGroups();
-      showToast('SKU 已添加');
-    };
-
-    window.openRuleEditor = id => {
-      const r = rules.find(x => x.id === id);
-      editingRuleId = id || '';
-      qs('#ruleTitle').textContent = r ? '编辑次品配置规则' : '新增次品配置规则';
-      qs('#ruleName').value = r?.name || '';
-      qs('#rulePriority').value = r?.priority || 5;
-      qs('#ruleAction').value = r?.action || '上架至次品区';
-      qs('#ruleStatus').value = r?.status || '启用';
-      conditionGroups = [[{ field: 'SKU', value: r ? 'SKU-ALPHA-001' : '' }]];
-      renderConditionGroups();
-      openLayer('#ruleModal');
-    };
-
-    function saveRule() {
-      const id = editingRuleId;
-      const summary = conditionGroups.map(group =>
-        group.map(condition => `${condition.field}${condition.value ? ' = ' + condition.value : ''}`).join(' 且 ')
-      ).join(' 或 ');
-      const next = {
-        id: id || 'RULE-' + String(rules.length + 1).padStart(3, '0'),
-        name: qs('#ruleName').value || '未命名次品规则',
-        priority: Number(qs('#rulePriority').value || 5),
-        status: qs('#ruleStatus').value,
-        action: qs('#ruleAction').value,
-        summary: summary || 'SKU'
-      };
-      rules = id ? rules.map(r => r.id === id ? next : r) : [next, ...rules];
-      renderRules(); closeLayers(); showToast(id ? '次品规则已更新' : '次品规则已保存');
-    }
-
-    qs('#openConfig').onclick = () => { renderRules(); openLayer('#configModal'); };
-    qs('#addRule').onclick = () => openRuleEditor();
-    qs('#saveRule').onclick = saveRule;
-    qs('#addGroup').onclick = () => window.addConditionGroup();
-    qs('#confirmSolution').onclick = submitSolution;
-    qs('#finalRepair').onclick = () => { closeLayers(); showToast(`已确认${warnState?.plan || '返修'}`); };
-    qs('#finalScrap').onclick = () => { closeLayers(); showToast('已改为报损'); };
-    qs('#resetFilter').onclick = () => { qs('#filterSku').value = ''; qs('#filterSupplier').value = ''; qs('#filterWarehouse').value = ''; renderTable(); };
-    ['#filterSku', '#filterSupplier', '#filterWarehouse'].forEach(id => qs(id).addEventListener('input', renderTable));
-    document.querySelectorAll('[data-close], #mask').forEach(el => el.addEventListener('click', closeLayers));
-    renderTable();
-  </script>
+  <div class="toast" data-visible="false">已保存</div>
+  <script src="./script.js"></script>
 </body>
 </html>
+
