@@ -312,7 +312,7 @@
     .type-col { width: 150px; }
     .warehouse-col { width: 215px; }
     .sku-col { width: 220px; }
-    .solution-col { width: 160px; }
+    .solution-col { width: 220px; }
     .logistics-col { width: 225px; }
     .receiver-col { width: 260px; }
     .other-col { width: 210px; }
@@ -353,6 +353,16 @@
       background: #f9f0ff;
       border-color: #d3adf7;
     }
+    .settlement-card {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid #d6e4ff;
+      border-radius: 4px;
+      background: #f0f5ff;
+      color: #475467;
+      line-height: 1.8;
+    }
+    .settlement-card strong { color: #1f2937; }
     .checkbox {
       width: 18px;
       height: 18px;
@@ -707,9 +717,31 @@
             <label class="required">返修方案</label>
             <select class="select" id="schemeType">
               <option value="返修入库">返修入库</option>
-              <option value="退款">退款</option>
+              <option value="赔款">赔款</option>
+              <option value="抵扣账单">抵扣账单</option>
               <option value="返修换货">返修换货</option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <p class="section-title">费用信息</p>
+          <div class="form-grid three">
+            <div class="form-item">
+              <label>返修费</label>
+              <input class="input" id="repairFee" type="number" min="0" placeholder="请输入返修费" />
+            </div>
+            <div class="form-item">
+              <label>预估运费</label>
+              <input class="input" id="freightAmount" type="number" min="0" placeholder="请输入预估运费" />
+            </div>
+            <div class="form-item">
+              <label>运费承担方</label>
+              <select class="select" id="freightBearer">
+                <option>公司承担</option>
+                <option>供应商承担</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -728,11 +760,11 @@
         </div>
 
         <div class="form-section hidden" id="refundSection">
-          <p class="section-title">退款信息</p>
+          <p class="section-title">赔款 / 抵扣账单信息</p>
           <div class="refund-line">
             <div class="form-item">
-              <label class="required">退款金额</label>
-              <input class="input" id="refundAmount" placeholder="请输入退款金额" />
+              <label class="required">金额</label>
+              <input class="input" id="refundAmount" placeholder="请输入赔款或抵扣金额" />
             </div>
             <div class="form-item">
               <label>流水号</label>
@@ -740,28 +772,24 @@
             </div>
             <button class="btn" title="删除">⌫</button>
           </div>
-          <span class="add-refund">⊕ 添加退款</span>
+          <span class="add-refund">⊕ 添加金额记录</span>
           <div class="form-grid three">
             <div class="form-item">
-              <label class="required">退款方式</label>
+              <label class="required">处理方式</label>
               <select class="select" id="refundMethod">
-                <option>请选择退款方式</option>
-                <option>银行转账</option>
-                <option>支付宝</option>
-                <option>原路退回</option>
+                <option>赔款</option>
+                <option>抵扣账单</option>
               </select>
             </div>
             <div class="form-item">
-              <label class="required">退款状态</label>
+              <label class="required">对账状态</label>
               <select class="select" id="refundStatus">
-                <option>请选择退款状态</option>
-                <option>待退款</option>
-                <option>部分退款</option>
-                <option>已退款</option>
+                <option>已付款</option>
+                <option>待核对</option>
               </select>
             </div>
             <div class="form-item">
-              <label>实际退款金额</label>
+              <label>实际确认金额</label>
               <input class="input" id="actualRefundAmount" value="0" disabled />
             </div>
             <div class="form-item">
@@ -781,7 +809,7 @@
               <label class="required">对应单据类型</label>
               <select class="select" id="relatedDocType">
                 <option>采购退货单</option>
-                <option>应付退款单</option>
+                <option>供应商对账单</option>
                 <option>供应商索赔单</option>
               </select>
             </div>
@@ -800,6 +828,7 @@
               </div>
             </div>
           </div>
+          <div class="settlement-card" id="settlementPreview"></div>
         </div>
 
         <div class="form-section hidden" id="exchangeSection">
@@ -827,25 +856,36 @@
     let currentRowIndex = 0;
     const rows = [
       { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', status:'返修中', solution:'返修入库', returnLogistics:'', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
-      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', status:'返修中', solution:'退款', relatedDocNo:'CGTH2604170003', refundAmount:'2625', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
+      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', status:'返修中', solution:'赔款', relatedDocNo:'CGTH2604170003', refundAmount:'2625', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
       { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', status:'返修中', solution:'返修换货', exchangeSku:'SKU-GAMMA-321', exchangeQty:8, logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
       { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', status:'返修中', solution:'返修入库', returnLogistics:'SF2604148891', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
       { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', status:'返修中', solution:'返修入库', returnLogistics:'', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
     ];
 
+    rows.forEach(row => {
+      const feeMap = {
+        RX26061700004: { repairFee: '480', freightAmount: '120', freightBearer: '公司承担' },
+        RX26041700003: { solution: '赔款', settlementType: '赔款', settlementStatus: '已付款', repairFee: '0', freightAmount: '80', freightBearer: '供应商承担', refundAmount: '2625' },
+        RX26041700002: { repairFee: '680', freightAmount: '160', freightBearer: '公司承担' },
+        RX26041400001: { solution: '抵扣账单', settlementType: '抵扣账单', settlementStatus: '待核对', repairFee: '0', freightAmount: '60', freightBearer: '供应商承担', refundAmount: '520' },
+        RX26041000002: { repairFee: '300', freightAmount: '90', freightBearer: '公司承担' },
+      };
+      Object.assign(row, feeMap[row.no] || {});
+    });
+
     const body = document.querySelector('#tableBody');
-    const solutionClass = solution => solution === '退款' ? 'refund' : solution === '返修换货' ? 'exchange' : '';
+    const solutionClass = solution => (solution === '赔款' || solution === '抵扣账单') ? 'refund' : solution === '返修换货' ? 'exchange' : '';
 
     function renderRows() {
       body.innerHTML = rows.map((row, index) => {
         const logisticsAction = row.solution === '返修入库'
           ? `<button class="action-link" data-action="bind-logistics" data-index="${index}">绑定物流单</button><br>`
           : '';
-        const solutionDetail = row.solution === '退款'
-          ? `对应单号：${row.relatedDocNo || '-'}<br>退款金额：${row.refundAmount || '-'}`
+        const solutionDetail = row.solution === '赔款' || row.solution === '抵扣账单'
+          ? `金额：${row.refundAmount || '-'}<br>对账状态：${row.settlementStatus || (row.solution === '赔款' ? '已付款' : '待核对')}`
           : row.solution === '返修换货'
             ? `换后SKU：${row.exchangeSku || '-'}<br>换货数量：${row.exchangeQty || '-'}`
-            : `回程物流：${row.returnLogistics || '待绑定'}`;
+            : `返修费：${row.repairFee || 0}<br>运费承担方：${row.freightBearer || '-'}<br>回程物流：${row.returnLogistics || '待绑定'}`;
         return `
           <tr>
             <td class="check-col"><span class="checkbox"></span></td>
@@ -865,7 +905,7 @@
               库存类型：次品
             </td>
             <td><span class="solution-tag ${solutionClass(row.solution)}">${row.solution}</span><br>${solutionDetail}</td>
-            <td>物流单号：${row.logistics}<br>物流渠道：${row.channel}<br>运费：- CNY</td>
+            <td>物流单号：${row.logistics}<br>物流渠道：${row.channel}<br>预估运费：${row.freightAmount || '-'} CNY<br>运费承担方：${row.freightBearer || '-'}</td>
             <td>收件人：${row.receiver}<br>收件电话：${row.phone}<br>收件人地址：${row.address}</td>
             <td>所属部门：产品开发中心-工业开发部<br>备注：返修出库<br>附件：<a class="link">上传</a></td>
             <td>创建人：张晶<br>创建时间：${row.create}<br>更新人：张晶<br>更新时间：${row.update}</td>
@@ -898,8 +938,35 @@
     function switchSchemeSections() {
       const type = document.getElementById('schemeType').value;
       document.getElementById('repairInboundSection').classList.toggle('hidden', type !== '返修入库');
-      document.getElementById('refundSection').classList.toggle('hidden', type !== '退款');
+      document.getElementById('refundSection').classList.toggle('hidden', type !== '赔款' && type !== '抵扣账单');
       document.getElementById('exchangeSection').classList.toggle('hidden', type !== '返修换货');
+      const refundMethod = document.getElementById('refundMethod');
+      const refundStatus = document.getElementById('refundStatus');
+      if (type === '赔款') {
+        refundMethod.value = '赔款';
+        refundStatus.value = '已付款';
+      }
+      if (type === '抵扣账单') {
+        refundMethod.value = '抵扣账单';
+        refundStatus.value = '待核对';
+      }
+      updateSettlementPreview();
+    }
+
+    function updateSettlementPreview() {
+      const preview = document.getElementById('settlementPreview');
+      if (!preview) return;
+      const type = document.getElementById('schemeType').value;
+      const amount = document.getElementById('refundAmount').value || '0';
+      if (type === '抵扣账单') {
+        preview.innerHTML = `将生成供应商对账单数据，金额 <strong>${amount}</strong>，状态 <strong>待核对</strong>。`;
+        return;
+      }
+      if (type === '赔款') {
+        preview.innerHTML = `将生成供应商对账单明细数据，金额 <strong>${amount}</strong>，状态 <strong>已付款</strong>。`;
+        return;
+      }
+      preview.innerHTML = '';
     }
 
     function openLogistics(index) {
@@ -917,7 +984,12 @@
       document.getElementById('schemeOrderNo').value = row.no;
       document.getElementById('schemeSku').value = row.sku;
       document.getElementById('schemeType').value = row.solution;
+      document.getElementById('repairFee').value = row.repairFee || 0;
+      document.getElementById('freightAmount').value = row.freightAmount || 0;
+      document.getElementById('freightBearer').value = row.freightBearer || '公司承担';
       document.getElementById('refundAmount').value = row.refundAmount || '';
+      document.getElementById('refundMethod').value = row.settlementType || (row.solution === '抵扣账单' ? '抵扣账单' : '赔款');
+      document.getElementById('refundStatus').value = row.settlementStatus || (row.solution === '抵扣账单' ? '待核对' : '已付款');
       document.getElementById('relatedDocNo').value = row.relatedDocNo || '';
       document.getElementById('exchangeSku').value = row.exchangeSku || '';
       document.getElementById('exchangeQty').value = row.exchangeQty || row.qty;
@@ -951,6 +1023,13 @@
       if (action === 'log') showToast('打开操作日志');
     });
     document.getElementById('schemeType').addEventListener('change', switchSchemeSections);
+    document.getElementById('refundAmount').addEventListener('input', updateSettlementPreview);
+    document.getElementById('refundMethod').addEventListener('change', () => {
+      const method = document.getElementById('refundMethod').value;
+      document.getElementById('schemeType').value = method;
+      document.getElementById('refundStatus').value = method === '抵扣账单' ? '待核对' : '已付款';
+      switchSchemeSections();
+    });
     document.getElementById('saveLogistics').addEventListener('click', () => {
       rows[currentRowIndex].returnLogistics = document.getElementById('logisticsNo').value || '待绑定';
       closeModal('logisticsModal');
@@ -960,13 +1039,18 @@
     document.getElementById('saveScheme').addEventListener('click', () => {
       const row = rows[currentRowIndex];
       row.solution = document.getElementById('schemeType').value;
+      row.repairFee = document.getElementById('repairFee').value || '0';
+      row.freightAmount = document.getElementById('freightAmount').value || '0';
+      row.freightBearer = document.getElementById('freightBearer').value;
       row.refundAmount = document.getElementById('refundAmount').value;
+      row.settlementType = document.getElementById('refundMethod').value;
+      row.settlementStatus = document.getElementById('refundStatus').value;
       row.relatedDocNo = document.getElementById('relatedDocNo').value;
       row.exchangeSku = document.getElementById('exchangeSku').value;
       row.exchangeQty = document.getElementById('exchangeQty').value;
       closeModal('schemeModal');
       renderRows();
-      showToast('返修方案已保存');
+      showToast(row.solution === '抵扣账单' ? '方案已保存，供应商对账单数据待核对' : row.solution === '赔款' ? '方案已保存，供应商对账明细已付款' : '返修方案已保存');
     });
   </script>
 </body>
