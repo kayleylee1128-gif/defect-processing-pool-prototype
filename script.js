@@ -7,6 +7,8 @@ const modalBody = document.querySelector("#modal-body");
 const modalTitle = document.querySelector("#modal-title");
 const confirmButton = document.querySelector("[data-action='confirm-modal']");
 const toast = document.querySelector(".toast");
+const drawerOriginalBody = drawer.querySelector(".c-drawer__body").innerHTML;
+const drawerOriginalMeta = drawer.querySelector(".c-drawer__meta").innerHTML;
 
 let modalMode = "default";
 let currentPlan = null;
@@ -49,6 +51,14 @@ function closeDrawer() {
   drawerMask.dataset.open = "false";
 }
 
+function openPendingDetailDrawer() {
+  document.querySelector("#drawer-title").textContent = "次品待处理详情";
+  drawer.querySelector(".c-drawer__meta").innerHTML = drawerOriginalMeta;
+  drawer.querySelector(".c-drawer__tabs").hidden = false;
+  drawer.querySelector(".c-drawer__body").innerHTML = drawerOriginalBody;
+  openDrawer();
+}
+
 function getSelectValue(name) {
   return document.querySelector(`[data-select='${name}']`)?.dataset.value || "";
 }
@@ -64,33 +74,37 @@ function setSelectValue(select, value, label) {
 function applyFilters() {
   const supplier = getSelectValue("supplier");
   const warehouse = getSelectValue("warehouse");
+  const source = getSelectValue("source");
   const sku = document.querySelector("[data-field='sku-filter']").value.trim().toUpperCase();
   const keyword = document.querySelector("[data-field='global-search']").value.trim().toUpperCase();
   const rows = [...document.querySelectorAll("[data-row='pending']")];
   let visibleCount = 0;
   let visibleCost = 0;
+  let pendingQty = 0;
 
   rows.forEach((row) => {
     const rowText = `${row.dataset.supplier} ${row.dataset.sku} ${row.dataset.warehouse}`.toUpperCase();
     const matched = (!supplier || row.dataset.supplier === supplier)
       && (!warehouse || row.dataset.warehouse === warehouse)
+      && (!source || row.dataset.source === source)
       && (!sku || row.dataset.sku.toUpperCase().includes(sku))
       && (!keyword || rowText.includes(keyword));
     row.hidden = !matched;
     if (matched) {
       visibleCount += 1;
       visibleCost += Number(row.dataset.totalCost);
+      pendingQty += Number(row.dataset.defectiveQty);
     }
   });
 
   document.querySelector("[data-role='empty-row']").hidden = visibleCount > 0;
-  document.querySelector("[data-role='table-summary']").innerHTML = `待处理聚合 <strong>${visibleCount}</strong> 组，采购成本合计 <strong>${money(visibleCost)}</strong>`;
+  document.querySelector("[data-role='table-summary']").innerHTML = `待处理聚合 <strong>${visibleCount}</strong> 组，待处理数量 <strong>${pendingQty}</strong> 件，采购成本合计 <strong>${money(visibleCost)}</strong>`;
 }
 
 function resetFilters() {
   document.querySelector("[data-field='sku-filter']").value = "";
   document.querySelector("[data-field='global-search']").value = "";
-  document.querySelectorAll(".c-select[data-select='supplier'], .c-select[data-select='warehouse']").forEach((select) => {
+  document.querySelectorAll(".c-select[data-select='supplier'], .c-select[data-select='warehouse'], .c-select[data-select='source']").forEach((select) => {
     const option = select.querySelector(".c-select__option[data-value='']");
     setSelectValue(select, "", option.textContent);
   });
@@ -125,9 +139,9 @@ function configListTemplate() {
           <td class="c-table__cell--actions"><a class="link" data-action="config-edit">编辑</a><a class="link" data-action="config-disable">禁用</a><a class="link" data-action="config-log">日志</a></td>
         </tr>
         <tr>
-          <td>低货值次品丢弃</td>
+          <td>低货值次品暂存</td>
           <td><div class="condition-summary"><span class="tag tag--processing">条件组 1</span><span>货值满足低货值配置条件</span></div></td>
-          <td><span class="tag tag--error">当场丢弃</span></td>
+          <td><span class="tag tag--warning">放置次品暂存区</span></td>
           <td><span class="tag tag--success">启用</span></td>
           <td class="c-table__cell--actions"><a class="link" data-action="config-edit">编辑</a><a class="link" data-action="config-disable">禁用</a><a class="link" data-action="config-log">日志</a></td>
         </tr>
@@ -217,7 +231,7 @@ function configFormTemplate(titleText) {
             <span>处理方案</span>
             <div class="segmented" data-role="config-action">
               <button class="c-segmented__item c-segmented__item--active" data-action-value="上架次品区" type="button">上架次品区</button>
-              <button class="c-segmented__item" data-action-value="当场丢弃" type="button">当场丢弃</button>
+              <button class="c-segmented__item" data-action-value="放置次品暂存区" type="button">放置次品暂存区</button>
             </div>
           </label>
         </div>
@@ -294,19 +308,54 @@ function bindModalInteractions() {
 }
 
 function planTemplate(plan) {
+  if (plan.source === "temporary") {
+    return `
+      <dl class="info-grid">
+        <dt>供应商</dt><dd>${plan.supplier}</dd>
+        <dt>SKU</dt><dd>${plan.sku}</dd>
+        <dt>实物来源</dt><dd><span class="tag tag--warning">次品暂存区</span></dd>
+        <dt>待处理数量</dt><dd>${plan.qty}</dd>
+        <dt>采购成本</dt><dd>${money(plan.totalCost)}</dd>
+        <dt>历史处理次数</dt><dd>${plan.historyCount} 次</dd>
+      </dl>
+      <div class="plan-form">
+        <div class="form-field">
+          <span>处理方案</span>
+          <div class="segmented" data-role="temporary-choice">
+            <button class="c-segmented__item c-segmented__item--active" data-temporary-choice="compensation" type="button">供应商赔款</button>
+            <button class="c-segmented__item" data-temporary-choice="company" type="button">公司承担</button>
+          </div>
+        </div>
+        <div class="repair-fields">
+          <label class="form-field">
+            <span data-role="amount-label">供应商赔款金额</span>
+            <input class="input" data-field="responsibility-amount" type="number" min="0" value="${plan.totalCost}" />
+          </label>
+          <label class="form-field">
+            <span>责任原因</span>
+            <input class="input" data-field="responsibility-reason" value="退件次品无法上架" />
+          </label>
+        </div>
+        <div class="threshold-note" data-role="temporary-note">确认后生成供应商赔款处理记录，并同步生成供应商扣款对账明细。</div>
+        <section class="plan-preview" data-role="plan-preview"></section>
+      </div>
+    `;
+  }
   return `
     <dl class="info-grid">
       <dt>供应商</dt><dd>${plan.supplier}</dd>
       <dt>SKU</dt><dd>${plan.sku}</dd>
       <dt>次品数量</dt><dd>${plan.qty}</dd>
       <dt>总成本</dt><dd>${money(plan.totalCost)}</dd>
+      <dt>实物来源</dt><dd><span class="tag tag--processing">已上架次品区</span></dd>
+      <dt>历史处理次数</dt><dd>${plan.historyCount} 次</dd>
     </dl>
     <div class="plan-form">
       <div class="form-field">
-        <span>是否返修</span>
+        <span>处理方案</span>
         <div class="segmented" data-role="repair-choice">
-          <button class="c-segmented__item c-segmented__item--active" data-plan-choice="repair" type="button">是，返修</button>
-          <button class="c-segmented__item" data-plan-choice="scrap" type="button">否，报损</button>
+          <button class="c-segmented__item c-segmented__item--active" data-plan-choice="repair" type="button">返修</button>
+          <button class="c-segmented__item" data-plan-choice="scrap" type="button">报损</button>
         </div>
       </div>
       <div class="repair-fields" data-repair-fields>
@@ -315,12 +364,36 @@ function planTemplate(plan) {
           <input class="input" data-field="repair-qty" type="number" min="1" max="${plan.qty}" value="${plan.qty}" />
         </label>
         <label class="form-field">
-          <span>返修成本</span>
-          <input class="input" data-field="repair-cost" type="number" min="0" value="0" />
+          <span>预估运费</span>
+          <input class="input" data-field="estimated-freight" type="number" min="0" value="0" />
         </label>
-        <div class="threshold-note">若成本大于 1000，返修成本占总成本 80% 以上，不建议返修；若成本小于 1000，返修成本占总成本 60% 以上，不建议返修。</div>
+        <div class="form-field">
+          <span>运费承担方</span>
+          <div class="segmented">
+            <button class="c-segmented__item c-segmented__item--active" data-freight-bearer="company" type="button">公司承担</button>
+            <button class="c-segmented__item" data-freight-bearer="supplier" type="button">供应商承担</button>
+          </div>
+        </div>
+        <label class="form-field">
+          <span>返修费</span>
+          <input class="input" data-field="repair-fee" type="number" min="0" value="0" />
+        </label>
+        <div class="threshold-note">返修成本比较 = 返修费 + 公司承担的预估运费。总成本大于 1000 时，占比达到 80% 不建议返修；总成本小于等于 1000 时，占比达到 60% 不建议返修。</div>
       </div>
-      <div class="scrap-note" data-scrap-note hidden>将让仓库对次品全部报损丢弃。</div>
+      <div data-scrap-fields hidden>
+        <div class="form-field">
+          <span>报损承担方式</span>
+          <div class="segmented">
+            <button class="c-segmented__item c-segmented__item--active" data-scrap-responsibility="supplier" type="button">供应商赔款</button>
+            <button class="c-segmented__item" data-scrap-responsibility="company" type="button">公司承担</button>
+          </div>
+        </div>
+        <label class="form-field" data-compensation-field>
+          <span>赔款金额</span>
+          <input class="input" data-field="scrap-compensation-amount" type="number" min="0" value="${plan.totalCost}" />
+        </label>
+        <div class="scrap-note">确认后生成报损出库单并进入审核流；供应商赔款将同步生成供应商对账明细。</div>
+      </div>
       <section class="plan-preview" data-role="plan-preview"></section>
     </div>
   `;
@@ -329,12 +402,29 @@ function planTemplate(plan) {
 function updatePlanPreview() {
   const preview = modalBody.querySelector("[data-role='plan-preview']");
   if (!preview || !currentPlan) return;
-  const selected = modalBody.querySelector("[data-plan-choice].c-segmented__item--active")?.dataset.planChoice;
-  if (selected === "scrap") {
-    preview.innerHTML = `<h3>方案预览</h3><div class="preview-lines"><div>确认后，将让仓库对当前 ${currentPlan.qty} 件次品全部报损丢弃。</div></div>`;
+  if (currentPlan.source === "temporary") {
+    const selected = modalBody.querySelector("[data-temporary-choice].c-segmented__item--active")?.dataset.temporaryChoice;
+    const amount = Number(modalBody.querySelector("[data-field='responsibility-amount']")?.value || 0);
+    const action = selected === "company" ? "公司承担" : "供应商赔款";
+    const result = selected === "company" ? "记录公司承担成本，不生成供应商对账明细" : "生成供应商扣款对账明细";
+    preview.innerHTML = `<h3>方案预览</h3><div class="plan-preview__grid"><div class="metric"><span>处理方案</span><strong>${action}</strong></div><div class="metric"><span>处理数量</span><strong>${currentPlan.qty}</strong></div><div class="metric"><span>金额</span><strong>${money(amount)}</strong></div></div><div class="preview-lines" style="margin-top: var(--space-3);"><div>${result}，并写入 SKU 历史处理记录。</div></div>`;
     return;
   }
-  const repairCost = Number(modalBody.querySelector("[data-field='repair-cost']")?.value || 0);
+  const selected = modalBody.querySelector("[data-plan-choice].c-segmented__item--active")?.dataset.planChoice;
+  if (selected === "scrap") {
+    const responsibility = modalBody.querySelector("[data-scrap-responsibility].c-segmented__item--active")?.dataset.scrapResponsibility || "supplier";
+    const amount = Number(modalBody.querySelector("[data-field='scrap-compensation-amount']")?.value || 0);
+    const result = responsibility === "supplier"
+      ? `供应商赔款 ${money(amount)}，确认后生成供应商对账明细。`
+      : "公司承担损失，仅生成内部报损处理记录。";
+    preview.innerHTML = `<h3>方案预览</h3><div class="preview-lines"><div>确认后生成报损出库单并推送报损审核流。</div><div>${result}</div></div>`;
+    return;
+  }
+  const repairFee = Number(modalBody.querySelector("[data-field='repair-fee']")?.value || 0);
+  const estimatedFreight = Number(modalBody.querySelector("[data-field='estimated-freight']")?.value || 0);
+  const freightBearer = modalBody.querySelector("[data-freight-bearer].c-segmented__item--active")?.dataset.freightBearer || "company";
+  const companyFreight = freightBearer === "company" ? estimatedFreight : 0;
+  const repairCost = repairFee + companyFreight;
   const ratio = currentPlan.totalCost > 0 ? (repairCost / currentPlan.totalCost) * 100 : 0;
   const threshold = currentPlan.totalCost > 1000 ? 80 : 60;
   const riskClass = ratio >= threshold ? "metric--danger" : ratio >= threshold * 0.75 ? "metric--warning" : "";
@@ -343,7 +433,9 @@ function updatePlanPreview() {
     <h3>成本测算</h3>
     <div class="plan-preview__grid">
       <div class="metric"><span>总成本</span><strong>${money(currentPlan.totalCost)}</strong></div>
-      <div class="metric"><span>返修成本</span><strong>${money(repairCost)}</strong></div>
+      <div class="metric"><span>返修费</span><strong>${money(repairFee)}</strong></div>
+      <div class="metric"><span>公司承担运费</span><strong>${money(companyFreight)}</strong></div>
+      <div class="metric"><span>比较成本</span><strong>${money(repairCost)}</strong></div>
       <div class="metric ${riskClass}"><span>成本占比</span><strong>${ratio.toFixed(2)}%</strong></div>
     </div>
     <div class="preview-lines" style="margin-top: var(--space-3);"><div>${advice}</div></div>
@@ -369,6 +461,8 @@ function openPlanModal(row) {
     totalCost: Number(row.dataset.totalCost),
     supplier: row.dataset.supplier,
     sku: row.dataset.sku,
+    source: row.dataset.source,
+    historyCount: Number(row.dataset.historyCount || 0),
   };
   openModal("设置处理方案", planTemplate(currentPlan), "确认方案", "plan");
   bindSegmented(modalBody);
@@ -376,25 +470,50 @@ function openPlanModal(row) {
 }
 
 function submitPlan() {
+  if (currentPlan.source === "temporary") {
+    const selected = modalBody.querySelector("[data-temporary-choice].c-segmented__item--active")?.dataset.temporaryChoice;
+    const amountInput = modalBody.querySelector("[data-field='responsibility-amount']");
+    const reasonInput = modalBody.querySelector("[data-field='responsibility-reason']");
+    const amount = Number(amountInput.value);
+    if (Number.isNaN(amount) || amount < 0 || !reasonInput.value.trim()) {
+      showToast("请填写大于等于 0 的金额和责任原因");
+      return;
+    }
+    closeModal();
+    showToast(selected === "company" ? "已确认公司承担，历史处理记录已更新" : "供应商赔款已确认，对账明细已生成");
+    return;
+  }
   const selected = modalBody.querySelector("[data-plan-choice].c-segmented__item--active")?.dataset.planChoice;
   if (selected === "scrap") {
+    const responsibility = modalBody.querySelector("[data-scrap-responsibility].c-segmented__item--active")?.dataset.scrapResponsibility || "supplier";
+    const amountInput = modalBody.querySelector("[data-field='scrap-compensation-amount']");
+    const amount = Number(amountInput?.value || 0);
+    if (responsibility === "supplier" && (Number.isNaN(amount) || amount < 0)) {
+      showToast("供应商赔款金额必须大于等于 0");
+      return;
+    }
     closeModal();
-    showToast("已选择报损方案，将让仓库对次品全部报损丢弃");
+    showToast(responsibility === "supplier" ? "报损方案已确认，供应商赔款对账明细已生成" : "报损方案已确认，公司承担损失记录已生成");
     return;
   }
 
   const qtyInput = modalBody.querySelector("[data-field='repair-qty']");
-  const costInput = modalBody.querySelector("[data-field='repair-cost']");
+  const repairFeeInput = modalBody.querySelector("[data-field='repair-fee']");
+  const freightInput = modalBody.querySelector("[data-field='estimated-freight']");
   const qty = Number(qtyInput.value);
-  const repairCost = Number(costInput.value);
+  const repairFee = Number(repairFeeInput.value);
+  const estimatedFreight = Number(freightInput.value);
+  const freightBearer = modalBody.querySelector("[data-freight-bearer].c-segmented__item--active")?.dataset.freightBearer || "company";
+  const repairCost = repairFee + (freightBearer === "company" ? estimatedFreight : 0);
   qtyInput.setAttribute("aria-invalid", String(Number.isNaN(qty) || qty <= 0 || qty > currentPlan.qty));
-  costInput.setAttribute("aria-invalid", String(Number.isNaN(repairCost) || repairCost < 0));
+  repairFeeInput.setAttribute("aria-invalid", String(Number.isNaN(repairFee) || repairFee < 0));
+  freightInput.setAttribute("aria-invalid", String(Number.isNaN(estimatedFreight) || estimatedFreight < 0));
   if (Number.isNaN(qty) || qty <= 0 || qty > currentPlan.qty) {
     showToast("返修数量需大于 0，且不能超过当前次品数量");
     return;
   }
-  if (Number.isNaN(repairCost) || repairCost < 0) {
-    showToast("返修成本必须大于等于 0");
+  if (Number.isNaN(repairFee) || repairFee < 0 || Number.isNaN(estimatedFreight) || estimatedFreight < 0) {
+    showToast("返修费和预估运费必须大于等于 0");
     return;
   }
 
@@ -411,6 +530,27 @@ function submitPlan() {
 
   closeModal();
   showToast("处理方案已确认：返修申请已生成");
+}
+
+function openHistoryDrawer(row) {
+  const count = Number(row.dataset.historyCount || 0);
+  document.querySelector("#drawer-title").textContent = `${row.dataset.sku} 历史处理记录`;
+  drawer.querySelector(".c-drawer__meta").innerHTML = `<span class="tag tag--processing">${row.dataset.supplier}</span><span>历史发起 <strong>${count}</strong> 次</span><span>当前来源：${row.dataset.source === "temporary" ? "次品暂存区" : "已上架次品区"}</span>`;
+  drawer.querySelector(".c-drawer__tabs").hidden = true;
+  drawer.querySelector(".c-drawer__body").innerHTML = `
+    <section class="history-summary">
+      <div class="metric"><span>累计处理数量</span><strong>${count ? 72 : 0}</strong></div>
+      <div class="metric"><span>返修 / 报损</span><strong>${count ? "1 / 1" : "0 / 0"}</strong></div>
+      <div class="metric"><span>赔款 / 公司承担</span><strong>${count ? "1 / 0" : "0 / 0"}</strong></div>
+    </section>
+    <h3 class="c-section-title">历次处理明细</h3>
+    ${count ? `<table class="c-table"><thead><tr><th>发起时间</th><th>来源</th><th>数量</th><th>处理方案</th><th>金额</th><th>关联单据</th><th>结果</th></tr></thead><tbody>
+      <tr><td>2026-05-28</td><td>已上架</td><td>30</td><td>返修入库</td><td>¥680.00</td><td><a class="link">RX260528001</a></td><td><span class="tag tag--success">已完成</span></td></tr>
+      <tr><td>2026-05-26</td><td>暂存区</td><td>14</td><td>供应商赔款</td><td>¥888.00</td><td><a class="link">ST260526009</a></td><td><span class="tag tag--processing">已生成对账</span></td></tr>
+      <tr><td>2026-05-18</td><td>已上架</td><td>28</td><td>报损</td><td>¥1,904.00</td><td><a class="link">BS260518016</a></td><td><span class="tag tag--success">已完成</span></td></tr>
+    </tbody></table>` : `<div class="empty-state">该 SKU 暂无历史处理记录</div>`}
+  `;
+  openDrawer();
 }
 
 function bindSelects(scope = document) {
@@ -446,12 +586,31 @@ function bindSegmented(scope = document) {
       }
       if (item.dataset.planChoice === "repair") {
         modalBody.querySelector("[data-repair-fields]").hidden = false;
-        modalBody.querySelector("[data-scrap-note]").hidden = true;
+        modalBody.querySelector("[data-scrap-fields]").hidden = true;
         updatePlanPreview();
       }
       if (item.dataset.planChoice === "scrap") {
         modalBody.querySelector("[data-repair-fields]").hidden = true;
-        modalBody.querySelector("[data-scrap-note]").hidden = false;
+        modalBody.querySelector("[data-scrap-fields]").hidden = false;
+        updatePlanPreview();
+      }
+      if (item.dataset.temporaryChoice) {
+        const isCompany = item.dataset.temporaryChoice === "company";
+        modalBody.querySelector("[data-role='amount-label']").textContent = isCompany ? "公司承担金额" : "供应商赔款金额";
+        modalBody.querySelector("[data-role='temporary-note']").textContent = isCompany ? "确认后记录公司承担成本，不生成供应商对账明细。" : "确认后生成供应商赔款处理记录，并同步生成供应商扣款对账明细。";
+        updatePlanPreview();
+      }
+      if (item.dataset.feeBearer) {
+        const preview = modalBody.querySelector(".plan-preview .preview-lines");
+        if (preview) preview.innerHTML = item.dataset.feeBearer === "supplier" ? "<div>返修费应付：¥500.00</div><div>运费由供应商承担，将生成 ¥100.00 供应商扣款。</div><div>确认后费用锁定。</div>" : "<div>返修费应付：¥500.00</div><div>当前运费由公司承担，不生成运费扣款。</div><div>确认后费用锁定。</div>";
+      }
+      if (item.dataset.freightBearer) {
+        updatePlanPreview();
+      }
+      if (item.dataset.scrapResponsibility) {
+        const isSupplier = item.dataset.scrapResponsibility === "supplier";
+        const field = modalBody.querySelector("[data-compensation-field]");
+        if (field) field.hidden = !isSupplier;
         updatePlanPreview();
       }
       updateConfigPreview();
@@ -534,12 +693,12 @@ modalBody.addEventListener("click", (event) => {
   }
   if (action === "warning-scrap") {
     closeModal();
-    showToast("已改为报损方案，将让仓库对次品全部报损丢弃");
+    showToast("已改为报损方案，将生成报损出库处理");
   }
 });
 
 modalBody.addEventListener("input", (event) => {
-  if (event.target.matches("[data-field='repair-cost'], [data-field='repair-qty']")) updatePlanPreview();
+  if (event.target.matches("[data-field='repair-fee'], [data-field='estimated-freight'], [data-field='repair-qty'], [data-field='responsibility-amount'], [data-field='scrap-compensation-amount']")) updatePlanPreview();
   if (event.target.closest(".condition-row") || event.target.matches("[data-field='config-name']")) updateConfigPreview();
 });
 
@@ -561,11 +720,15 @@ document.querySelector("[data-field='sku-filter']").addEventListener("keydown", 
 });
 
 document.querySelectorAll("[data-action='open-pending-detail']").forEach((item) => {
-  item.addEventListener("click", openDrawer);
+  item.addEventListener("click", openPendingDetailDrawer);
 });
 
 document.querySelectorAll("[data-action='open-plan']").forEach((item) => {
   item.addEventListener("click", () => openPlanModal(item.closest("tr")));
+});
+
+document.querySelectorAll("[data-action='open-history']").forEach((item) => {
+  item.addEventListener("click", () => openHistoryDrawer(item.closest("tr")));
 });
 
 document.querySelectorAll("[data-action='close-drawer']").forEach((item) => {
