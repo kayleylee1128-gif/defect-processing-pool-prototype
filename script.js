@@ -336,7 +336,7 @@ function planTemplate(plan) {
             <input class="input" data-field="responsibility-reason" value="退件次品无法上架" />
           </label>
         </div>
-        <div class="threshold-note" data-role="temporary-note">确认后生成供应商赔款处理记录，并同步生成供应商扣款对账明细。</div>
+        <div class="threshold-note" data-role="temporary-note">确认后仅记录供应商赔款金额和处理记录，不生成供应商对账数据。</div>
         <section class="plan-preview" data-role="plan-preview"></section>
       </div>
     `;
@@ -392,7 +392,7 @@ function planTemplate(plan) {
           <span>赔款金额</span>
           <input class="input" data-field="scrap-compensation-amount" type="number" min="0" value="${plan.totalCost}" />
         </label>
-        <div class="scrap-note">确认后生成报损出库单并进入审核流；供应商赔款将同步生成供应商对账明细。</div>
+        <div class="scrap-note">确认后生成报损出库单并进入审核流；供应商赔款仅记录赔款金额，不生成供应商对账数据。</div>
       </div>
       <section class="plan-preview" data-role="plan-preview"></section>
     </div>
@@ -406,7 +406,7 @@ function updatePlanPreview() {
     const selected = modalBody.querySelector("[data-temporary-choice].c-segmented__item--active")?.dataset.temporaryChoice;
     const amount = Number(modalBody.querySelector("[data-field='responsibility-amount']")?.value || 0);
     const action = selected === "company" ? "公司承担" : "供应商赔款";
-    const result = selected === "company" ? "记录公司承担成本，不生成供应商对账明细" : "生成供应商扣款对账明细";
+    const result = selected === "company" ? "记录公司承担成本，不生成供应商对账数据" : "仅记录赔款金额，不生成供应商对账数据";
     preview.innerHTML = `<h3>方案预览</h3><div class="plan-preview__grid"><div class="metric"><span>处理方案</span><strong>${action}</strong></div><div class="metric"><span>处理数量</span><strong>${currentPlan.qty}</strong></div><div class="metric"><span>金额</span><strong>${money(amount)}</strong></div></div><div class="preview-lines" style="margin-top: var(--space-3);"><div>${result}，并写入 SKU 历史处理记录。</div></div>`;
     return;
   }
@@ -415,7 +415,7 @@ function updatePlanPreview() {
     const responsibility = modalBody.querySelector("[data-scrap-responsibility].c-segmented__item--active")?.dataset.scrapResponsibility || "supplier";
     const amount = Number(modalBody.querySelector("[data-field='scrap-compensation-amount']")?.value || 0);
     const result = responsibility === "supplier"
-      ? `供应商赔款 ${money(amount)}，确认后生成供应商对账明细。`
+      ? `供应商赔款 ${money(amount)}，确认后仅记录赔款金额，不生成供应商对账数据。`
       : "公司承担损失，仅生成内部报损处理记录。";
     preview.innerHTML = `<h3>方案预览</h3><div class="preview-lines"><div>确认后生成报损出库单并推送报损审核流。</div><div>${result}</div></div>`;
     return;
@@ -480,7 +480,7 @@ function submitPlan() {
       return;
     }
     closeModal();
-    showToast(selected === "company" ? "已确认公司承担，历史处理记录已更新" : "供应商赔款已确认，对账明细已生成");
+    showToast(selected === "company" ? "已确认公司承担，历史处理记录已更新" : "供应商赔款已确认，赔款金额已记录");
     return;
   }
   const selected = modalBody.querySelector("[data-plan-choice].c-segmented__item--active")?.dataset.planChoice;
@@ -493,7 +493,7 @@ function submitPlan() {
       return;
     }
     closeModal();
-    showToast(responsibility === "supplier" ? "报损方案已确认，供应商赔款对账明细已生成" : "报损方案已确认，公司承担损失记录已生成");
+    showToast(responsibility === "supplier" ? "报损方案已确认，供应商赔款金额已记录" : "报损方案已确认，公司承担损失记录已生成");
     return;
   }
 
@@ -546,7 +546,7 @@ function openHistoryDrawer(row) {
     <h3 class="c-section-title">历次处理明细</h3>
     ${count ? `<table class="c-table"><thead><tr><th>发起时间</th><th>来源</th><th>数量</th><th>处理方案</th><th>金额</th><th>关联单据</th><th>结果</th></tr></thead><tbody>
       <tr><td>2026-05-28</td><td>已上架</td><td>30</td><td>返修入库</td><td>¥680.00</td><td><a class="link">RX260528001</a></td><td><span class="tag tag--success">已完成</span></td></tr>
-      <tr><td>2026-05-26</td><td>暂存区</td><td>14</td><td>供应商赔款</td><td>¥888.00</td><td><a class="link">ST260526009</a></td><td><span class="tag tag--processing">已生成对账</span></td></tr>
+      <tr><td>2026-05-26</td><td>暂存区</td><td>14</td><td>供应商赔款</td><td>¥888.00</td><td><a class="link">ST260526009</a></td><td><span class="tag tag--success">已记录赔款</span></td></tr>
       <tr><td>2026-05-18</td><td>已上架</td><td>28</td><td>报损</td><td>¥1,904.00</td><td><a class="link">BS260518016</a></td><td><span class="tag tag--success">已完成</span></td></tr>
     </tbody></table>` : `<div class="empty-state">该 SKU 暂无历史处理记录</div>`}
   `;
@@ -597,7 +597,7 @@ function bindSegmented(scope = document) {
       if (item.dataset.temporaryChoice) {
         const isCompany = item.dataset.temporaryChoice === "company";
         modalBody.querySelector("[data-role='amount-label']").textContent = isCompany ? "公司承担金额" : "供应商赔款金额";
-        modalBody.querySelector("[data-role='temporary-note']").textContent = isCompany ? "确认后记录公司承担成本，不生成供应商对账明细。" : "确认后生成供应商赔款处理记录，并同步生成供应商扣款对账明细。";
+        modalBody.querySelector("[data-role='temporary-note']").textContent = isCompany ? "确认后记录公司承担成本，不生成供应商对账数据。" : "确认后仅记录供应商赔款金额和处理记录，不生成供应商对账数据。";
         updatePlanPreview();
       }
       if (item.dataset.feeBearer) {
