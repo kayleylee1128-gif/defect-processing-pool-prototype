@@ -782,9 +782,9 @@
               </select>
             </div>
             <div class="form-item">
-              <label class="required">对账状态</label>
+              <label class="required">状态</label>
               <select class="select" id="refundStatus">
-                <option>已付款</option>
+                <option>已记录</option>
                 <option>待核对</option>
               </select>
             </div>
@@ -865,7 +865,7 @@
     rows.forEach(row => {
       const feeMap = {
         RX26061700004: { repairFee: '480', freightAmount: '120', freightBearer: '公司承担' },
-        RX26041700003: { solution: '赔款', settlementType: '赔款', settlementStatus: '已付款', repairFee: '0', freightAmount: '80', freightBearer: '供应商承担', refundAmount: '2625' },
+        RX26041700003: { solution: '赔款', settlementType: '赔款', settlementStatus: '已记录', repairFee: '0', freightAmount: '80', freightBearer: '供应商承担', refundAmount: '2625' },
         RX26041700002: { repairFee: '680', freightAmount: '160', freightBearer: '公司承担' },
         RX26041400001: { solution: '抵扣账单', settlementType: '抵扣账单', settlementStatus: '待核对', repairFee: '0', freightAmount: '60', freightBearer: '供应商承担', refundAmount: '520' },
         RX26041000002: { repairFee: '300', freightAmount: '90', freightBearer: '公司承担' },
@@ -882,7 +882,7 @@
           ? `<button class="action-link" data-action="bind-logistics" data-index="${index}">绑定物流单</button><br>`
           : '';
         const solutionDetail = row.solution === '赔款' || row.solution === '抵扣账单'
-          ? `金额：${row.refundAmount || '-'}<br>对账状态：${row.settlementStatus || (row.solution === '赔款' ? '已付款' : '待核对')}`
+          ? `金额：${row.refundAmount || '-'}<br>处理状态：${row.settlementStatus || (row.solution === '赔款' ? '已记录' : '待核对')}`
           : row.solution === '返修换货'
             ? `换后SKU：${row.exchangeSku || '-'}<br>换货数量：${row.exchangeQty || '-'}`
             : `返修费：${row.repairFee || 0}<br>运费承担方：${row.freightBearer || '-'}<br>回程物流：${row.returnLogistics || '待绑定'}`;
@@ -944,7 +944,7 @@
       const refundStatus = document.getElementById('refundStatus');
       if (type === '赔款') {
         refundMethod.value = '赔款';
-        refundStatus.value = '已付款';
+        refundStatus.value = '已记录';
       }
       if (type === '抵扣账单') {
         refundMethod.value = '抵扣账单';
@@ -963,7 +963,7 @@
         return;
       }
       if (type === '赔款') {
-        preview.innerHTML = `将生成供应商对账单明细数据，金额 <strong>${amount}</strong>，状态 <strong>已付款</strong>。`;
+        preview.innerHTML = `仅记录供应商赔款金额 <strong>${amount}</strong>，不生成供应商对账数据。`;
         return;
       }
       preview.innerHTML = '';
@@ -1027,7 +1027,7 @@
     document.getElementById('refundMethod').addEventListener('change', () => {
       const method = document.getElementById('refundMethod').value;
       document.getElementById('schemeType').value = method;
-      document.getElementById('refundStatus').value = method === '抵扣账单' ? '待核对' : '已付款';
+      document.getElementById('refundStatus').value = method === '抵扣账单' ? '待核对' : '已记录';
       switchSchemeSections();
     });
     document.getElementById('saveLogistics').addEventListener('click', () => {
@@ -1050,7 +1050,7 @@
       row.exchangeQty = document.getElementById('exchangeQty').value;
       closeModal('schemeModal');
       renderRows();
-      showToast(row.solution === '抵扣账单' ? '方案已保存，供应商对账单数据待核对' : row.solution === '赔款' ? '方案已保存，供应商对账明细已付款' : '返修方案已保存');
+      showToast(row.solution === '抵扣账单' ? '方案已保存，供应商对账单数据待核对' : row.solution === '赔款' ? '方案已保存，供应商赔款金额已记录' : '返修方案已保存');
     });
   </script>
 </body>
