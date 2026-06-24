@@ -272,6 +272,14 @@ input {
   font-size: var(--font-size);
 }
 
+.c-table-scroll {
+  overflow-x: auto;
+}
+
+.c-table--wide {
+  min-width: 1280px;
+}
+
 .c-table th,
 .c-table td {
   padding: 0 var(--space-4);
@@ -852,6 +860,16 @@ input {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
+}
+
+[data-scrap-fields] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+[data-scrap-fields][hidden] {
+  display: none;
 }
 
 .threshold-note,
