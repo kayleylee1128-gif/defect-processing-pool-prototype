@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -148,7 +148,7 @@
               <td class="c-table__cell--num"><strong>14</strong></td>
               <td class="c-table__cell--num">¥888.00</td>
               <td><a class="link" data-action="open-history">3 次</a></td>
-              <td>供应商赔款 · 05-26</td>
+              <td>返修-退款 · 05-26</td>
               <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
             </tr>
             <tr data-row="pending" data-source="putaway" data-defective-qty="14" data-total-cost="2520" data-supplier="杭州品越家居" data-sku="SKU-PAD-7710" data-warehouse="华东一仓" data-history-count="1">
@@ -193,35 +193,22 @@
     </div>
     <div class="c-drawer__meta">
       <span class="tag tag--warning">次品库存</span>
-      <span>采购成本 <strong>¥3,128.00</strong></span>
       <span>待采购处理</span>
     </div>
     <nav class="c-drawer__tabs">
-      <button class="c-drawer__tab" aria-selected="true" data-tab="basic" type="button">基础信息</button>
-      <button class="c-drawer__tab" aria-selected="false" data-tab="stock" type="button">库存来源</button>
+      <button class="c-drawer__tab" aria-selected="true" data-tab="stock" type="button">库存来源</button>
       <button class="c-drawer__tab" aria-selected="false" data-tab="log" type="button">操作日志</button>
     </nav>
     <div class="c-drawer__body">
-      <div data-tab-pane="basic">
-        <h3 class="c-section-title">供应商 + SKU 聚合</h3>
-        <dl class="c-desc">
-          <dt>供应商</dt><dd>深圳启明电子</dd>
-          <dt>SKU</dt><dd>SKU-BAT-8842</dd>
-          <dt>仓库</dt><dd>华东一仓</dd>
-          <dt>次品数量</dt><dd>46</dd>
-          <dt>采购成本</dt><dd>¥68.00 / 件</dd>
-          <dt>成本金额</dt><dd>¥3,128.00</dd>
-        </dl>
-      </div>
-      <div data-tab-pane="stock" hidden>
+      <div data-tab-pane="stock">
         <table class="c-table">
           <thead>
-            <tr><th>退货收货单</th><th>上架时间</th><th class="c-table__cell--num">数量</th><th class="c-table__cell--num">采购成本</th></tr>
+            <tr><th>退货收货单</th><th>收货时间</th><th class="c-table__cell--num">数量</th></tr>
           </thead>
           <tbody>
-            <tr><td>RT-IN-20260520-0089</td><td>2026-05-20 15:12</td><td class="c-table__cell--num">12</td><td class="c-table__cell--num">¥816.00</td></tr>
-            <tr><td>RT-IN-20260521-0034</td><td>2026-05-21 11:30</td><td class="c-table__cell--num">18</td><td class="c-table__cell--num">¥1,224.00</td></tr>
-            <tr><td>RT-IN-20260522-0017</td><td>2026-05-22 09:14</td><td class="c-table__cell--num">16</td><td class="c-table__cell--num">¥1,088.00</td></tr>
+            <tr><td>RT-IN-20260520-0089</td><td>2026-05-20 15:12</td><td class="c-table__cell--num">12</td></tr>
+            <tr><td>RT-IN-20260521-0034</td><td>2026-05-21 11:30</td><td class="c-table__cell--num">18</td></tr>
+            <tr><td>RT-IN-20260522-0017</td><td>2026-05-22 09:14</td><td class="c-table__cell--num">16</td></tr>
           </tbody>
         </table>
       </div>
