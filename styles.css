@@ -280,6 +280,17 @@ input {
   min-width: 1280px;
 }
 
+.c-table--compact {
+  min-width: 720px;
+  table-layout: fixed;
+}
+
+.c-table--compact th,
+.c-table--compact td {
+  height: auto;
+  padding: var(--space-2) var(--space-3);
+}
+
 .c-table th,
 .c-table td {
   padding: 0 var(--space-4);
@@ -520,6 +531,10 @@ input {
   background: var(--color-bg-spotlight);
 }
 
+.plan-form .segmented {
+  background: var(--color-bg-container);
+}
+
 .c-segmented__item {
   border: 0;
   border-radius: var(--radius-sm);
@@ -530,9 +545,9 @@ input {
 }
 
 .c-segmented__item--active {
-  background: var(--color-bg-container);
-  color: var(--color-primary-6);
-  box-shadow: var(--shadow-1);
+  background: var(--color-primary-6);
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(5, 145, 255, .08);
 }
 
 .c-modal-mask,
@@ -856,6 +871,28 @@ input {
   margin-top: var(--space-5);
 }
 
+.repair-plan-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius);
+  background: var(--color-bg-spotlight);
+}
+
+.repair-plan-panel[hidden] {
+  display: none;
+}
+
+.exchange-sku-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.exchange-sku-list[hidden] {
+  display: none;
+}
+
 .repair-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -888,14 +925,14 @@ input {
 }
 
 .scrap-note {
-  color: var(--color-error);
-  background: var(--color-error-bg);
-  border: 1px solid var(--color-error-border);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-spotlight);
+  border: 1px solid var(--color-border-secondary);
 }
 
 .plan-preview__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
   gap: var(--space-3);
 }
 
