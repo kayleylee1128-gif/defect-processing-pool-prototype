@@ -1043,6 +1043,112 @@ input {
   gap: var(--space-3);
 }
 
+.compensation-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.compensation-panel h3 {
+  margin: 0 0 16px;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+  color: var(--color-text);
+}
+
+.compensation-row {
+  display: grid;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.compensation-row--top {
+  grid-template-columns: minmax(240px, 1fr) minmax(260px, 1fr) 36px;
+}
+
+.compensation-row--bottom {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--space-4);
+}
+
+.form-field em {
+  margin-right: 3px;
+  color: var(--color-danger);
+  font-style: normal;
+}
+
+.icon-delete {
+  width: 36px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.icon-delete:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
+}
+
+.link-add {
+  display: inline-flex;
+  margin: 12px 0 4px 50%;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.voucher-field {
+  margin-top: var(--space-4);
+}
+
+.voucher-field > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.voucher-upload {
+  display: grid;
+  grid-template-columns: 92px 132px 1fr;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.upload-hint {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  text-align: right;
+}
+
+.voucher-box {
+  width: 132px;
+  height: 108px;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.voucher-box span,
+.voucher-box strong {
+  display: block;
+}
+
+.voucher-box span {
+  margin-bottom: 6px;
+  color: var(--color-text-secondary);
+  font-size: 22px;
+}
+
+.voucher-box strong {
+  font-weight: 400;
+}
+
 .upload-control {
   display: flex;
   align-items: center;
@@ -1166,8 +1272,17 @@ input {
   .condition-row,
   .repair-fields,
   .settlement-fields,
+  .compensation-row--top,
+  .compensation-row--bottom,
+  .voucher-upload,
   .plan-preview__grid {
     grid-template-columns: 1fr;
+  }
+
+  .link-add,
+  .upload-hint {
+    margin-left: 0;
+    text-align: left;
   }
 
   .info-grid,
