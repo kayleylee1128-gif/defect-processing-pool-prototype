@@ -16,7 +16,7 @@
       --border: #d9d9d9;
       --line: #edf0f5;
       --bg: #f5f7fa;
-      --header: #5aa7e8;
+      --header: #4096ff;
     }
     * { box-sizing: border-box; }
     body {
@@ -30,11 +30,11 @@
     button, input, select { font: inherit; }
     .topbar {
       height: 44px;
-      background: var(--header);
+      background: linear-gradient(90deg, #4096ff 0%, #69b1ff 100%);
       color: #fff;
       display: flex;
       align-items: center;
-      box-shadow: 0 1px 4px rgba(31, 74, 120, .18);
+      box-shadow: 0 1px 0 rgba(22, 119, 255, .18);
     }
     .brand {
       width: 52px;
@@ -131,9 +131,9 @@
     }
     .card {
       background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
     }
     .filter-card {
       padding: 14px 20px 16px;
@@ -282,7 +282,7 @@
     }
     table {
       width: 100%;
-      min-width: 1920px;
+      min-width: 1780px;
       border-collapse: collapse;
       table-layout: fixed;
     }
@@ -311,8 +311,8 @@
     .order-col { width: 250px; }
     .type-col { width: 150px; }
     .warehouse-col { width: 215px; }
-    .sku-col { width: 220px; }
-    .solution-col { width: 220px; }
+    .sku-col { width: 145px; }
+    .solution-col { width: 235px; }
     .logistics-col { width: 225px; }
     .receiver-col { width: 260px; }
     .other-col { width: 210px; }
@@ -430,6 +430,7 @@
       overflow: hidden;
     }
     .modal.wide { width: 980px; }
+    .modal.detail { width: 1120px; }
     .modal-header {
       height: 56px;
       padding: 0 24px;
@@ -533,6 +534,41 @@
       gap: 6px;
       margin: 4px 0 16px 50%;
     }
+    .detail-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px 28px;
+      margin-bottom: 18px;
+      color: #475467;
+    }
+    .detail-summary span {
+      color: #667085;
+      margin-right: 6px;
+    }
+    .detail-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .detail-table th,
+    .detail-table td {
+      padding: 14px 12px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .detail-table th:first-child,
+    .detail-table td:first-child {
+      width: 80px;
+    }
+    .detail-table .select {
+      display: inline-flex;
+      width: 280px;
+      align-items: center;
+      justify-content: center;
+    }
     .toast {
       position: fixed;
       top: 62px;
@@ -594,8 +630,7 @@
           <div class="state-tab">全部 (31)</div>
           <div class="state-tab">待审核 (0)</div>
           <div class="state-tab">待仓库作业 (0)</div>
-          <div class="state-tab">已出库 (8)</div>
-          <div class="state-tab active">返修中 (21)</div>
+          <div class="state-tab active">已出库 (8)</div>
           <div class="state-tab">异常 (0)</div>
           <div class="state-tab">已完成 (2)</div>
           <div class="state-tab">审核拒绝 (0)</div>
@@ -608,7 +643,7 @@
           <input class="input" placeholder="请输入" />
           <select class="select"><option>请选择创建人</option><option>张晶</option><option>李静</option></select>
           <select class="select"><option>请选择审核状态</option><option>待审核</option><option>审核通过</option></select>
-          <select class="select"><option>返修状态</option><option>返修中</option><option>已完成</option><option>异常</option></select>
+          <select class="select"><option>出库状态</option><option>待仓库作业</option><option>已出库</option><option>异常</option><option>已完成</option></select>
           <select class="select"><option>创建时间</option><option>更新时间</option></select>
           <div class="date-range"><input placeholder="开始日期" /><span>-</span><input placeholder="结束日期" /></div>
           <button class="btn primary">搜索</button>
@@ -693,6 +728,40 @@
       <div class="modal-footer">
         <button class="btn" data-close="logisticsModal">取消</button>
         <button class="btn primary" id="saveLogistics">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="detailModal">
+    <div class="modal detail">
+      <div class="modal-header">
+        <span>查看</span>
+        <button class="modal-close" data-close="detailModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-summary">
+          <div><span>单据类型：</span>返修出库</div>
+          <div><span>出库仓库：</span><strong id="detailWarehouse">-</strong></div>
+          <div><span>供应商：</span><strong id="detailVendor">-</strong></div>
+          <div><span>审核负责人：</span>朱丽洁</div>
+          <div><span>责任部门：</span>产品开发中心-工业开发部</div>
+          <div><span>库存类型：</span>次品</div>
+          <div style="grid-column:1 / -1"><span>备注：</span><strong id="detailRemark">供应商返修出库，仓库按单拣货出库。</strong></div>
+        </div>
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>SKU</th>
+              <th>采购单</th>
+              <th>申请数量</th>
+            </tr>
+          </thead>
+          <tbody id="detailSkuBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn primary" data-close="detailModal">关闭</button>
       </div>
     </div>
   </div>
@@ -842,11 +911,11 @@
   <script>
     let currentRowIndex = 0;
     const rows = [
-      { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', status:'返修中', solution:'返修入库', returnLogistics:'', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
-      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', status:'返修中', solution:'赔款', refundAmount:'2625', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
-      { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', status:'返修中', solution:'返修换货', exchangeSku:'SKU-GAMMA-321', exchangeQty:8, logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
-      { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', status:'返修中', solution:'返修入库', returnLogistics:'SF2604148891', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
-      { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', status:'返修中', solution:'返修入库', returnLogistics:'', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
+      { no:'RX26061700004', out:'CK2606170007', warehouse:'SZ01东莞仓', time:'2026-04-17 19:43:49', style:1, qty:1, sku:'SKU-ALPHA-001', vendor:'深圳启明电子', status:'已出库', solution:'返修入库', returnLogistics:'', logistics:'773416468912182', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 15:22:49', update:'2026-04-21 11:02:38' },
+      { no:'RX26041700003', out:'CK2604170005', warehouse:'海外仓中转仓', time:'2026-04-17 11:41:03', style:2, qty:2, sku:'SKU-BETA-118', vendor:'宁波辰禾能源', status:'已出库', solution:'赔款', refundAmount:'2625', logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:35:21', update:'2026-04-21 11:02:34' },
+      { no:'RX26041700002', out:'CK2604170004', warehouse:'SZ01东莞仓', time:'2026-04-17 11:41:03', style:8, qty:8, sku:'SKU-GAMMA-320', vendor:'苏州松岭科技', status:'已出库', solution:'返修换货', exchangeSku:'SKU-GAMMA-321', exchangeQty:8, logistics:'773416385726759', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-17 10:34:25', update:'2026-04-21 11:01:52' },
+      { no:'RX26041400001', out:'CK2604140001', warehouse:'SZ01东莞仓', time:'2026-04-14 16:14:49', style:2, qty:2, sku:'SKU-DELTA-056', vendor:'杭州图灵视觉', status:'已出库', solution:'返修入库', returnLogistics:'SF2604148891', logistics:'773415920201178', channel:'国内线下-申通快递-谢岗', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-14 10:41:06', update:'2026-04-21 11:01:48' },
+      { no:'RX26041000002', out:'CK2604100002', warehouse:'SZ01东莞仓', time:'2026-04-10 18:46:37', style:2, qty:2, sku:'SKU-EPS-205', vendor:'东莞锐鑫电子', status:'已出库', solution:'返修入库', returnLogistics:'', logistics:'773415281422994', channel:'淘宝-申通（谢岗）', receiver:'张晶', phone:'18975537514', address:'中国广东省深圳市龙岗区金鸿德电商产业园C栋5楼（前台收）', create:'2026-04-10 11:07:04', update:'2026-04-17 09:48:53' }
     ];
 
     rows.forEach(row => {
@@ -879,18 +948,15 @@
           <tr>
             <td class="check-col"><span class="checkbox"></span></td>
             <td>
-              单号：<a class="link">${row.no}</a><br>
+              单号：<a class="link" data-action="view" data-index="${index}">${row.no}</a><br>
               出库单号：${row.out}<br>
-              关联单号：-<br>
-              <span class="status-tag">${row.status}</span>
+              关联单号：-
             </td>
             <td>返修出库</td>
             <td>出库仓库：${row.warehouse}<br>出库时间：${row.time}</td>
             <td>
               款数：<a class="link">${row.style}</a><br>
               sku数量：<a class="link">${row.qty}</a><br>
-              SKU：${row.sku}<br>
-              供应商：${row.vendor}<br>
               库存类型：次品
             </td>
             <td><span class="solution-tag ${solutionClass(row.solution)}">${row.solution}</span><br>${solutionDetail}</td>
@@ -961,6 +1027,29 @@
       preview.innerHTML = '';
     }
 
+    function openDetail(index) {
+      currentRowIndex = Number(index);
+      const row = rows[currentRowIndex];
+      const skuRows = Array.from({ length: Math.min(Number(row.style) || 1, 4) }, (_, itemIndex) => {
+        const sku = itemIndex === 0 ? row.sku : `${row.sku}-${String(itemIndex + 1).padStart(2, '0')}`;
+        const qty = itemIndex === 0 ? row.qty : 1;
+        const purchaseNo = `PO${row.out.replace(/\D/g, '').slice(0, 10)}-${String(itemIndex + 1).padStart(2, '0')}`;
+        return `
+          <tr>
+            <td>${itemIndex + 1}</td>
+            <td>${sku}</td>
+            <td><span class="select">${purchaseNo}</span></td>
+            <td>${qty}</td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('detailWarehouse').textContent = row.warehouse;
+      document.getElementById('detailVendor').textContent = row.vendor;
+      document.getElementById('detailRemark').textContent = `供应商 ${row.vendor} 返修出库，共 ${row.style} 个 SKU，${row.qty} 件次品，处理方案为 ${row.solution}。`;
+      document.getElementById('detailSkuBody').innerHTML = skuRows;
+      openModal('detailModal');
+    }
+
     function openLogistics(index) {
       currentRowIndex = Number(index);
       const row = rows[currentRowIndex];
@@ -1014,7 +1103,7 @@
       const { action, index } = target.dataset;
       if (action === 'bind-logistics') openLogistics(index);
       if (action === 'edit-scheme') openScheme(index);
-      if (action === 'view') showToast('打开查看详情');
+      if (action === 'view') openDetail(index);
       if (action === 'log') showToast('打开操作日志');
     });
     document.getElementById('schemeType').addEventListener('change', switchSchemeSections);
@@ -1050,3 +1139,4 @@
   </script>
 </body>
 </html>
+
