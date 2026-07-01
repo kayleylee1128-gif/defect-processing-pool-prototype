@@ -413,47 +413,58 @@ function planTemplate(plan) {
         <div class="threshold-note">抵扣供应商由当前次品记录自动带出，不支持手工编辑。</div>
       </div>
       <div class="compensation-fields" data-compensation-fields hidden>
-        <table class="c-table c-table--compact">
-          <thead>
-            <tr><th class="c-table__cell--num">赔款金额</th><th>流水</th><th>赔款方式</th><th>赔款状态</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="c-table__cell--num"><input class="input" data-field="compensation-amount" type="number" min="0" value="${plan.totalCost}" /></td>
-              <td><input class="input" data-field="compensation-flow" placeholder="输入赔款流水号" /></td>
-              <td>
-                <div class="c-select" data-select="compensation-method" data-value="alipay">
-                  <button class="c-select__trigger" type="button" data-action="toggle-select">支付宝转账</button>
-                  <div class="c-select__menu">
-                    <button class="c-select__option c-select__option--active" type="button" data-value="alipay">支付宝转账</button>
-                    <button class="c-select__option" type="button" data-value="bank">银行卡转账</button>
-                  </div>
+        <section class="compensation-panel">
+          <h3>赔款信息</h3>
+          <div class="compensation-row compensation-row--top">
+            <label class="form-field">
+              <span><em>*</em>赔款金额</span>
+              <input class="input" data-field="compensation-amount" type="number" min="0" value="${plan.totalCost}" />
+            </label>
+            <label class="form-field">
+              <span>流水</span>
+              <input class="input" data-field="compensation-flow" placeholder="输入赔款流水号" value="ZFB202604170003" />
+            </label>
+            <button class="icon-delete" title="删除赔款" type="button">⌫</button>
+          </div>
+          <button class="link-add" type="button">⊕ 添加赔款</button>
+          <div class="compensation-row compensation-row--bottom">
+            <label class="form-field">
+              <span><em>*</em>赔款方式</span>
+              <div class="c-select" data-select="compensation-method" data-value="alipay">
+                <button class="c-select__trigger" type="button" data-action="toggle-select">支付宝转账</button>
+                <div class="c-select__menu">
+                  <button class="c-select__option c-select__option--active" type="button" data-value="alipay">支付宝转账</button>
+                  <button class="c-select__option" type="button" data-value="bank">银行卡转账</button>
                 </div>
-              </td>
-              <td>
-                <div class="c-select" data-select="compensation-status" data-value="partial">
-                  <button class="c-select__trigger" type="button" data-action="toggle-select">部分</button>
-                  <div class="c-select__menu">
-                    <button class="c-select__option c-select__option--active" type="button" data-value="partial">部分</button>
-                    <button class="c-select__option" type="button" data-value="full">全部</button>
-                  </div>
+              </div>
+            </label>
+            <label class="form-field">
+              <span><em>*</em>赔款状态</span>
+              <div class="c-select" data-select="compensation-status" data-value="full">
+                <button class="c-select__trigger" type="button" data-action="toggle-select">全部</button>
+                <div class="c-select__menu">
+                  <button class="c-select__option" type="button" data-value="partial">部分</button>
+                  <button class="c-select__option c-select__option--active" type="button" data-value="full">全部</button>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="settlement-fields settlement-fields--compact">
-          <label class="form-field">
-            <span>实际退款金额</span>
-            <input class="input" data-field="actual-refund-amount" value="${money(plan.totalCost)}" disabled />
-          </label>
-          <div class="form-field">
+              </div>
+            </label>
+            <label class="form-field">
+              <span>实际退款金额</span>
+              <input class="input" data-field="actual-refund-amount" value="${money(plan.totalCost)}" disabled />
+            </label>
+          </div>
+          <div class="voucher-field">
             <span>凭证</span>
-            <div class="upload-control">
-              <button class="btn" data-action="choose-voucher" type="button">上传凭证</button>
+            <div class="voucher-upload">
+              <span class="upload-hint">jpg,jpeg,png</span>
+              <button class="voucher-box" data-action="choose-voucher" type="button">
+                <span>☁</span>
+                <strong>点击上传图片</strong>
+              </button>
               <span class="text-secondary" data-role="voucher-name">未上传</span>
             </div>
           </div>
+        </section>
         </div>
       </div>
       <section class="plan-preview" data-role="plan-preview"></section>
