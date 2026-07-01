@@ -139,9 +139,9 @@ function configListTemplate() {
           <td class="c-table__cell--actions"><a class="link" data-action="config-edit">编辑</a><a class="link" data-action="config-disable">禁用</a><a class="link" data-action="config-log">日志</a></td>
         </tr>
         <tr>
-          <td>低货值次品暂存</td>
+          <td>低货值次品框归集</td>
           <td><div class="condition-summary"><span class="tag tag--processing">条件组 1</span><span>货值满足低货值配置条件</span></div></td>
-          <td><span class="tag tag--warning">放置次品暂存区</span></td>
+          <td><span class="tag tag--warning">次品框归集</span></td>
           <td><span class="tag tag--success">启用</span></td>
           <td class="c-table__cell--actions"><a class="link" data-action="config-edit">编辑</a><a class="link" data-action="config-disable">禁用</a><a class="link" data-action="config-log">日志</a></td>
         </tr>
@@ -158,7 +158,7 @@ function configListTemplate() {
 }
 
 function conditionTypeSelect(activeValue) {
-  const options = ["SKU", "单价区间", "货值区间"];
+  const options = ["SKU", "平台", "单价区间", "货值区间"];
   return `
     <div class="c-select" data-select="condition-type" data-value="${activeValue}">
       <button class="c-select__trigger" type="button" data-action="toggle-select">${activeValue}</button>
@@ -172,15 +172,23 @@ function conditionTypeSelect(activeValue) {
 function conditionValueTemplate(type) {
   if (type === "SKU") {
     return `
-      <div class="sku-editor" data-condition-value>
-        <div class="segmented" data-role="sku-mode">
-          <button class="c-segmented__item c-segmented__item--active" data-action="sku-manual" type="button">手动输入</button>
-          <button class="c-segmented__item" data-action="sku-import" type="button">导入固定 SKU</button>
-        </div>
-        <input class="input" data-field="sku-list" value="SKU-BAT-8842, SKU-PAD-7710" placeholder="多个 SKU 用逗号或换行分隔" />
-        <div class="import-panel" hidden>
-          <button class="btn" data-action="choose-file" type="button">选择文件</button>
-          <span class="text-secondary" data-role="file-name">支持导入固定 SKU 清单</span>
+      <div class="sku-condition-control" data-condition-value>
+        <input class="input" data-field="sku-list" value="SKU-BAT-8842, SKU-PAD-7710" placeholder="输入SKU，回车添加" />
+        <button class="btn" data-action="choose-file" type="button">批量导入</button>
+        <span class="text-secondary" data-role="file-name" hidden>支持导入固定 SKU 清单</span>
+      </div>
+    `;
+  }
+  if (type === "平台") {
+    return `
+      <div class="c-select condition-value-select" data-select="condition-platform" data-value="amazon">
+        <button class="c-select__trigger" type="button" data-action="toggle-select">Amazon</button>
+        <div class="c-select__menu">
+          <button class="c-select__option c-select__option--active" type="button" data-value="amazon">Amazon</button>
+          <button class="c-select__option" type="button" data-value="ebay">eBay</button>
+          <button class="c-select__option" type="button" data-value="walmart">Walmart</button>
+          <button class="c-select__option" type="button" data-value="temu">Temu</button>
+          <button class="c-select__option" type="button" data-value="tiktok">TikTok Shop</button>
         </div>
       </div>
     `;
@@ -199,7 +207,7 @@ function conditionRowTemplate(type = "SKU") {
     <div class="condition-row">
       ${conditionTypeSelect(type)}
       ${conditionValueTemplate(type)}
-      <button class="btn btn--text" data-action="delete-condition" type="button">删除</button>
+      <button class="condition-delete" data-action="delete-condition" title="删除条件" type="button">×</button>
     </div>
   `;
 }
@@ -210,7 +218,7 @@ function conditionGroupTemplate(index) {
       <div class="condition-group__head">
         <span class="tag tag--processing">条件组 ${index}</span>
         <span class="text-secondary">组内条件需全部满足 (AND)</span>
-        <button class="btn btn--text" data-action="delete-condition-group" type="button">删除组</button>
+        <button class="btn btn--text condition-group__delete" data-action="delete-condition-group" type="button">删除组</button>
       </div>
       ${conditionRowTemplate("SKU")}
       <button class="btn" data-action="add-condition" type="button">+ 添加条件 (AND)</button>
@@ -231,7 +239,7 @@ function configFormTemplate(titleText) {
             <span>处理方案</span>
             <div class="segmented" data-role="config-action">
               <button class="c-segmented__item c-segmented__item--active" data-action-value="上架次品区" type="button">上架次品区</button>
-              <button class="c-segmented__item" data-action-value="放置次品暂存区" type="button">放置次品暂存区</button>
+              <button class="c-segmented__item" data-action-value="次品框归集" type="button">次品框归集</button>
             </div>
           </label>
         </div>
@@ -245,9 +253,10 @@ function configFormTemplate(titleText) {
               <div class="condition-group__head">
                 <span class="tag tag--processing">条件组 1</span>
                 <span class="text-secondary">组内条件需全部满足 (AND)</span>
-                <button class="btn btn--text" data-action="delete-condition-group" type="button">删除组</button>
+                <button class="btn btn--text condition-group__delete" data-action="delete-condition-group" type="button">删除组</button>
               </div>
               ${conditionRowTemplate("SKU")}
+              ${conditionRowTemplate("平台")}
               ${conditionRowTemplate("单价区间")}
               ${conditionRowTemplate("货值区间")}
               <button class="btn" data-action="add-condition" type="button">+ 添加条件 (AND)</button>
@@ -286,6 +295,9 @@ function describeConditionRow(row) {
     const fileName = row.querySelector("[data-role='file-name']")?.textContent || "";
     return skuInput && !skuInput.hidden ? `SKU 属于 ${skuInput.value || "未填写"}` : fileName;
   }
+  if (type === "平台") {
+    return `平台 = ${row.querySelector("[data-select='condition-platform'] .c-select__trigger")?.textContent || "未选择"}`;
+  }
   const inputs = row.querySelectorAll(".range-inputs input");
   return `${type} ${inputs[0]?.value || "不限"} 至 ${inputs[1]?.value || "不限"}`;
 }
@@ -307,32 +319,44 @@ function bindModalInteractions() {
   updateConfigPreview();
 }
 
+function planChoiceButtonsTemplate(plan) {
+  if (plan.source === "temporary") {
+    return `
+      <button class="c-segmented__item c-segmented__item--active" data-plan-choice="scrap" type="button">报损</button>
+      <button class="c-segmented__item" data-plan-choice="deduct" type="button">抵扣账单</button>
+      <button class="c-segmented__item" data-plan-choice="compensation" type="button">赔款</button>
+    `;
+  }
+  return `
+    <button class="c-segmented__item c-segmented__item--active" data-plan-choice="repair" type="button">返修</button>
+    <button class="c-segmented__item" data-plan-choice="scrap" type="button">报损</button>
+  `;
+}
+
 function planTemplate(plan) {
+  const isTemporary = plan.source === "temporary";
   return `
     <dl class="info-grid">
       <dt>供应商</dt><dd>${plan.supplier}</dd>
       <dt>SKU</dt><dd>${plan.sku}</dd>
       <dt>次品数量</dt><dd>${plan.qty}</dd>
       <dt>总成本</dt><dd>${money(plan.totalCost)}</dd>
-      <dt>实物来源</dt><dd>${plan.source === "temporary" ? '<span class="tag tag--warning">次品暂存区</span>' : '<span class="tag tag--processing">已上架次品区</span>'}</dd>
+      <dt>次品存放类型</dt><dd>${plan.source === "temporary" ? '<span class="tag tag--warning">次品框归集</span>' : '<span class="tag tag--processing">已上架次品区</span>'}</dd>
       <dt>历史处理次数</dt><dd>${plan.historyCount} 次</dd>
     </dl>
     <div class="plan-form">
       <div class="form-field">
         <span>处理方式</span>
         <div class="segmented" data-role="repair-choice">
-          <button class="c-segmented__item c-segmented__item--active" data-plan-choice="repair" type="button">返修</button>
-          <button class="c-segmented__item" data-plan-choice="scrap" type="button">报损</button>
+          ${planChoiceButtonsTemplate(plan)}
         </div>
       </div>
-      <div class="repair-plan-panel" data-repair-plan-fields>
+      <div class="repair-plan-panel" data-repair-plan-fields ${isTemporary ? "hidden" : ""}>
         <div class="form-field">
           <span>返修方案</span>
           <div class="segmented" data-role="repair-scheme">
             <button class="c-segmented__item c-segmented__item--active" data-repair-scheme="inbound" type="button">返修入库</button>
             <button class="c-segmented__item" data-repair-scheme="exchange" type="button">返修换货</button>
-            <button class="c-segmented__item" data-repair-scheme="refund" type="button">退款</button>
-            <button class="c-segmented__item" data-repair-scheme="deduct" type="button">抵扣账单</button>
           </div>
         </div>
         <div class="exchange-sku-list" data-exchange-sku-list hidden>
@@ -351,10 +375,8 @@ function planTemplate(plan) {
             </tbody>
           </table>
         </div>
-        <div class="threshold-note" data-refund-note hidden>退款方案仅记录退款金额、流水号及处理记录，不生成供应商对账数据。</div>
-        <div class="threshold-note" data-deduct-note hidden>抵扣账单方案会打通供应商对账模块，生成待核对的供应商对账数据。</div>
       </div>
-      <div class="repair-fields" data-repair-fields>
+      <div class="repair-fields" data-repair-fields ${isTemporary ? "hidden" : ""}>
         <label class="form-field">
           <span>返修数量</span>
           <input class="input" data-field="repair-qty" type="number" min="1" max="${plan.qty}" value="${plan.qty}" />
@@ -376,8 +398,63 @@ function planTemplate(plan) {
         </label>
         <div class="threshold-note">返修成本比较 = 返修费 + 公司承担的预估运费。总成本大于 1000 时，占比达到 80% 不建议返修；总成本小于等于 1000 时，占比达到 60% 不建议返修。</div>
       </div>
-      <div data-scrap-fields hidden>
+      <div data-scrap-fields ${isTemporary ? "" : "hidden"}>
         <div class="scrap-note">确认后生成报损出库单并进入报损审核流，当前弹窗不再展示二级方案。</div>
+      </div>
+      <div class="settlement-fields" data-deduct-fields hidden>
+        <label class="form-field">
+          <span>抵扣金额</span>
+          <input class="input" data-field="deduct-amount" type="number" min="0" value="${plan.totalCost}" />
+        </label>
+        <label class="form-field">
+          <span>抵扣供应商</span>
+          <input class="input" value="${plan.supplier}" disabled />
+        </label>
+        <div class="threshold-note">抵扣供应商由当前次品记录自动带出，不支持手工编辑。</div>
+      </div>
+      <div class="compensation-fields" data-compensation-fields hidden>
+        <table class="c-table c-table--compact">
+          <thead>
+            <tr><th class="c-table__cell--num">赔款金额</th><th>流水</th><th>赔款方式</th><th>赔款状态</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="c-table__cell--num"><input class="input" data-field="compensation-amount" type="number" min="0" value="${plan.totalCost}" /></td>
+              <td><input class="input" data-field="compensation-flow" placeholder="输入赔款流水号" /></td>
+              <td>
+                <div class="c-select" data-select="compensation-method" data-value="alipay">
+                  <button class="c-select__trigger" type="button" data-action="toggle-select">支付宝转账</button>
+                  <div class="c-select__menu">
+                    <button class="c-select__option c-select__option--active" type="button" data-value="alipay">支付宝转账</button>
+                    <button class="c-select__option" type="button" data-value="bank">银行卡转账</button>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="c-select" data-select="compensation-status" data-value="partial">
+                  <button class="c-select__trigger" type="button" data-action="toggle-select">部分</button>
+                  <div class="c-select__menu">
+                    <button class="c-select__option c-select__option--active" type="button" data-value="partial">部分</button>
+                    <button class="c-select__option" type="button" data-value="full">全部</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="settlement-fields settlement-fields--compact">
+          <label class="form-field">
+            <span>实际退款金额</span>
+            <input class="input" data-field="actual-refund-amount" value="${money(plan.totalCost)}" disabled />
+          </label>
+          <div class="form-field">
+            <span>凭证</span>
+            <div class="upload-control">
+              <button class="btn" data-action="choose-voucher" type="button">上传凭证</button>
+              <span class="text-secondary" data-role="voucher-name">未上传</span>
+            </div>
+          </div>
+        </div>
       </div>
       <section class="plan-preview" data-role="plan-preview"></section>
     </div>
@@ -390,6 +467,35 @@ function updatePlanPreview() {
   const selected = modalBody.querySelector("[data-plan-choice].c-segmented__item--active")?.dataset.planChoice;
   if (selected === "scrap") {
     preview.innerHTML = `<h3>方案预览</h3><div class="preview-lines"><div>确认后生成报损出库单并推送报损审核流。</div><div>报损不需要维护返修方案。</div></div>`;
+    return;
+  }
+  if (selected === "deduct") {
+    const deductAmount = Number(modalBody.querySelector("[data-field='deduct-amount']")?.value || 0);
+    preview.innerHTML = `
+      <h3>抵扣信息</h3>
+      <div class="plan-preview__grid">
+        <div class="metric"><span>抵扣金额</span><strong>${money(deductAmount)}</strong></div>
+        <div class="metric"><span>抵扣供应商</span><strong>${currentPlan.supplier}</strong></div>
+        <div class="metric"><span>处理结果</span><strong>生成待抵扣记录</strong></div>
+      </div>
+    `;
+    return;
+  }
+  if (selected === "compensation") {
+    const compensationAmount = Number(modalBody.querySelector("[data-field='compensation-amount']")?.value || 0);
+    const actualRefundInput = modalBody.querySelector("[data-field='actual-refund-amount']");
+    if (actualRefundInput) actualRefundInput.value = money(compensationAmount);
+    const method = modalBody.querySelector("[data-select='compensation-method'] .c-select__trigger")?.textContent || "支付宝转账";
+    const status = modalBody.querySelector("[data-select='compensation-status'] .c-select__trigger")?.textContent || "部分";
+    preview.innerHTML = `
+      <h3>赔款信息</h3>
+      <div class="plan-preview__grid">
+        <div class="metric"><span>赔款金额合计</span><strong>${money(compensationAmount)}</strong></div>
+        <div class="metric"><span>实际退款金额</span><strong>${money(compensationAmount)}</strong></div>
+        <div class="metric"><span>赔款方式</span><strong>${method}</strong></div>
+        <div class="metric"><span>赔款状态</span><strong>${status}</strong></div>
+      </div>
+    `;
     return;
   }
   const repairScheme = modalBody.querySelector("[data-repair-scheme].c-segmented__item--active")?.dataset.repairScheme || "inbound";
@@ -405,16 +511,10 @@ function updatePlanPreview() {
   const schemeText = {
     inbound: "返修入库",
     exchange: "返修换货",
-    refund: "退款",
-    deduct: "抵扣账单",
   }[repairScheme];
-  const schemeResult = repairScheme === "deduct"
-    ? "将生成供应商对账模块待核对数据。"
-    : repairScheme === "refund"
-      ? "仅记录退款金额和处理记录，不生成供应商对账数据。"
-      : repairScheme === "exchange"
-        ? "将记录新换货 SKU、数量、单价和金额。"
-        : "供应商回货后进入返修入库流程。";
+  const schemeResult = repairScheme === "exchange"
+    ? "将记录新换货 SKU、数量、单价和金额。"
+    : "供应商回货后进入返修入库流程。";
   preview.innerHTML = `
     <h3>成本测算</h3>
     <div class="plan-preview__grid">
@@ -452,6 +552,7 @@ function openPlanModal(row) {
     historyCount: Number(row.dataset.historyCount || 0),
   };
   openModal("设置处理方案", planTemplate(currentPlan), "确认方案", "plan");
+  bindSelects(modalBody);
   bindSegmented(modalBody);
   updatePlanPreview();
 }
@@ -461,6 +562,37 @@ function submitPlan() {
   if (selected === "scrap") {
     closeModal();
     showToast("报损方案已确认，报损出库单已生成并进入审核流");
+    return;
+  }
+  if (selected === "deduct") {
+    const deductInput = modalBody.querySelector("[data-field='deduct-amount']");
+    const deductAmount = Number(deductInput.value);
+    deductInput.setAttribute("aria-invalid", String(Number.isNaN(deductAmount) || deductAmount <= 0));
+    if (Number.isNaN(deductAmount) || deductAmount <= 0) {
+      showToast("抵扣金额需大于 0");
+      return;
+    }
+    closeModal();
+    showToast("抵扣账单方案已确认，待抵扣记录已生成");
+    return;
+  }
+  if (selected === "compensation") {
+    const amountInput = modalBody.querySelector("[data-field='compensation-amount']");
+    const flowInput = modalBody.querySelector("[data-field='compensation-flow']");
+    const amount = Number(amountInput.value);
+    const flow = flowInput.value.trim();
+    amountInput.setAttribute("aria-invalid", String(Number.isNaN(amount) || amount <= 0));
+    flowInput.setAttribute("aria-invalid", String(!flow));
+    if (Number.isNaN(amount) || amount <= 0) {
+      showToast("赔款金额需大于 0");
+      return;
+    }
+    if (!flow) {
+      showToast("请填写赔款流水");
+      return;
+    }
+    closeModal();
+    showToast("赔款方案已确认，赔款信息已记录");
     return;
   }
 
@@ -516,18 +648,18 @@ function submitPlan() {
 function openHistoryDrawer(row) {
   const count = Number(row.dataset.historyCount || 0);
   document.querySelector("#drawer-title").textContent = `${row.dataset.sku} 历史处理记录`;
-  drawer.querySelector(".c-drawer__meta").innerHTML = `<span class="tag tag--processing">${row.dataset.supplier}</span><span>历史发起 <strong>${count}</strong> 次</span><span>当前来源：${row.dataset.source === "temporary" ? "次品暂存区" : "已上架次品区"}</span>`;
+  drawer.querySelector(".c-drawer__meta").innerHTML = `<span class="tag tag--processing">${row.dataset.supplier}</span><span>历史发起 <strong>${count}</strong> 次</span><span>当前存放类型：${row.dataset.source === "temporary" ? "次品框归集" : "已上架次品区"}</span>`;
   drawer.querySelector(".c-drawer__tabs").hidden = true;
   drawer.querySelector(".c-drawer__body").innerHTML = `
     <section class="history-summary">
       <div class="metric"><span>累计处理数量</span><strong>${count ? 72 : 0}</strong></div>
       <div class="metric"><span>返修 / 报损</span><strong>${count ? "1 / 1" : "0 / 0"}</strong></div>
-      <div class="metric"><span>返修换货 / 退款</span><strong>${count ? "1 / 1" : "0 / 0"}</strong></div>
+      <div class="metric"><span>返修入库 / 返修换货</span><strong>${count ? "1 / 1" : "0 / 0"}</strong></div>
     </section>
     <h3 class="c-section-title">历次处理明细</h3>
     ${count ? `<table class="c-table"><thead><tr><th>发起时间</th><th>来源</th><th>数量</th><th>处理方案</th><th>金额</th><th>关联单据</th><th>结果</th></tr></thead><tbody>
       <tr><td>2026-05-28</td><td>已上架</td><td>30</td><td>返修入库</td><td>¥680.00</td><td><a class="link">RX260528001</a></td><td><span class="tag tag--success">已完成</span></td></tr>
-      <tr><td>2026-05-26</td><td>暂存区</td><td>14</td><td>返修-退款</td><td>¥888.00</td><td><a class="link">RF260526009</a></td><td><span class="tag tag--success">已记录退款</span></td></tr>
+      <tr><td>2026-05-26</td><td>次品框归集</td><td>14</td><td>返修换货</td><td>¥888.00</td><td><a class="link">RX260526009</a></td><td><span class="tag tag--processing">返修中</span></td></tr>
       <tr><td>2026-05-18</td><td>已上架</td><td>28</td><td>报损</td><td>¥1,904.00</td><td><a class="link">BS260518016</a></td><td><span class="tag tag--success">已完成</span></td></tr>
     </tbody></table>` : `<div class="empty-state">该 SKU 暂无历史处理记录</div>`}
   `;
@@ -548,6 +680,19 @@ function bindSelects(scope = document) {
   });
 }
 
+function setPlanChoiceVisibility(choice) {
+  const repairPlanFields = modalBody.querySelector("[data-repair-plan-fields]");
+  const repairFields = modalBody.querySelector("[data-repair-fields]");
+  const scrapFields = modalBody.querySelector("[data-scrap-fields]");
+  const deductFields = modalBody.querySelector("[data-deduct-fields]");
+  const compensationFields = modalBody.querySelector("[data-compensation-fields]");
+  if (repairPlanFields) repairPlanFields.hidden = choice !== "repair";
+  if (repairFields) repairFields.hidden = choice !== "repair";
+  if (scrapFields) scrapFields.hidden = choice !== "scrap";
+  if (deductFields) deductFields.hidden = choice !== "deduct";
+  if (compensationFields) compensationFields.hidden = choice !== "compensation";
+}
+
 function bindSegmented(scope = document) {
   scope.querySelectorAll(".c-segmented__item").forEach((item) => {
     if (item.dataset.bound === "true") return;
@@ -565,23 +710,13 @@ function bindSegmented(scope = document) {
         row.querySelector(".import-panel").hidden = true;
         row.querySelector("[data-field='sku-list']").hidden = false;
       }
-      if (item.dataset.planChoice === "repair") {
-        modalBody.querySelector("[data-repair-plan-fields]").hidden = false;
-        modalBody.querySelector("[data-repair-fields]").hidden = false;
-        modalBody.querySelector("[data-scrap-fields]").hidden = true;
-        updatePlanPreview();
-      }
-      if (item.dataset.planChoice === "scrap") {
-        modalBody.querySelector("[data-repair-plan-fields]").hidden = true;
-        modalBody.querySelector("[data-repair-fields]").hidden = true;
-        modalBody.querySelector("[data-scrap-fields]").hidden = false;
+      if (item.dataset.planChoice) {
+        setPlanChoiceVisibility(item.dataset.planChoice);
         updatePlanPreview();
       }
       if (item.dataset.repairScheme) {
         const scheme = item.dataset.repairScheme;
         modalBody.querySelector("[data-exchange-sku-list]").hidden = scheme !== "exchange";
-        modalBody.querySelector("[data-refund-note]").hidden = scheme !== "refund";
-        modalBody.querySelector("[data-deduct-note]").hidden = scheme !== "deduct";
         updatePlanPreview();
       }
       if (item.dataset.feeBearer) {
@@ -589,6 +724,9 @@ function bindSegmented(scope = document) {
         if (preview) preview.innerHTML = item.dataset.feeBearer === "supplier" ? "<div>返修费应付：¥500.00</div><div>运费由供应商承担，将生成 ¥100.00 供应商扣款。</div><div>确认后费用锁定。</div>" : "<div>返修费应付：¥500.00</div><div>当前运费由公司承担，不生成运费扣款。</div><div>确认后费用锁定。</div>";
       }
       if (item.dataset.freightBearer) {
+        updatePlanPreview();
+      }
+      if (item.dataset.compensationMethod || item.dataset.compensationStatus) {
         updatePlanPreview();
       }
       updateConfigPreview();
@@ -608,6 +746,9 @@ document.addEventListener("click", (event) => {
       row.querySelector("[data-condition-value]").outerHTML = conditionValueTemplate(option.dataset.value);
       bindSegmented(row);
       updateConfigPreview();
+    }
+    if (select.dataset.select === "compensation-method" || select.dataset.select === "compensation-status") {
+      updatePlanPreview();
     }
     return;
   }
@@ -661,8 +802,17 @@ modalBody.addEventListener("click", (event) => {
     updateConfigPreview();
   }
   if (action === "choose-file") {
-    event.target.closest(".import-panel").querySelector("[data-role='file-name']").textContent = "已选择：defective-sku-list.xlsx";
+    const skuControl = event.target.closest(".sku-condition-control");
+    if (skuControl) {
+      const fileName = skuControl.querySelector("[data-role='file-name']");
+      fileName.hidden = false;
+      fileName.textContent = "已选择：defective-sku-list.xlsx";
+    }
     updateConfigPreview();
+  }
+  if (action === "choose-voucher") {
+    const voucherName = event.target.closest(".upload-control")?.querySelector("[data-role='voucher-name']");
+    if (voucherName) voucherName.textContent = "已上传：compensation-voucher.jpg";
   }
   if (action === "warning-cancel") closeModal();
   if (action === "warning-repair") {
@@ -676,7 +826,7 @@ modalBody.addEventListener("click", (event) => {
 });
 
 modalBody.addEventListener("input", (event) => {
-  if (event.target.matches("[data-field='repair-fee'], [data-field='estimated-freight'], [data-field='repair-qty'], [data-field='responsibility-amount'], [data-field='scrap-compensation-amount']")) updatePlanPreview();
+  if (event.target.matches("[data-field='repair-fee'], [data-field='estimated-freight'], [data-field='repair-qty'], [data-field='deduct-amount'], [data-field='compensation-amount']")) updatePlanPreview();
   if (event.target.matches("[data-field='exchange-qty']")) {
     const qty = Number(event.target.value || 0);
     const amount = modalBody.querySelector("[data-role='exchange-amount']");
@@ -692,6 +842,23 @@ document.querySelector("[data-action='collapse']").addEventListener("click", () 
 
 document.querySelector("[data-action='open-config']").addEventListener("click", () => {
   openModal("次品处理配置", configListTemplate(), "关闭", "log");
+});
+
+document.querySelectorAll("[data-pool-tab]").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.poolTab;
+    document.querySelectorAll("[data-pool-tab]").forEach((item) => {
+      const active = item === tab;
+      item.classList.toggle("c-tabs__item--active", active);
+      item.setAttribute("aria-selected", String(active));
+    });
+    document.querySelectorAll("[data-pool-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.poolPanel !== target;
+    });
+    document.querySelector("[data-role='table-summary']").innerHTML = target === "records"
+      ? `已处理记录 <strong>5</strong> 条，处置数量 <strong>116</strong> 件`
+      : `待处理聚合 <strong>4</strong> 组，待处理数量 <strong>105</strong> 件，采购成本合计 <strong>¥13,564.00</strong>`;
+  });
 });
 
 document.querySelector("[data-action='query-filter']").addEventListener("click", applyFilters);
