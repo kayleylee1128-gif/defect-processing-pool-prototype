@@ -51,7 +51,7 @@
             次品待处理
             <span class="c-page-header__title-extra">采购处理</span>
           </h1>
-          <p class="c-page-header__desc">已上架次品与次品暂存实物按来源聚合。采购在此给处理方案、查看 SKU 历史记录，并跟踪返修费用与供应商对账。</p>
+          <p class="c-page-header__desc">已上架次品与次品框归集实物按存放类型聚合。采购在此给处理方案，并可查看所有已发起的次品处置方案记录。</p>
         </div>
         <div class="c-page-header__actions">
           <button class="btn" data-action="open-config" type="button">次品处理配置</button>
@@ -89,13 +89,13 @@
             </div>
           </label>
           <label class="c-filter__field">
-            <span class="c-filter__label">实物来源</span>
+            <span class="c-filter__label">次品存放类型</span>
             <div class="c-select" data-select="source" data-value="">
-              <button class="c-select__trigger" type="button" data-action="toggle-select">全部来源</button>
+              <button class="c-select__trigger" type="button" data-action="toggle-select">全部存放类型</button>
               <div class="c-select__menu">
-                <button class="c-select__option c-select__option--active" type="button" data-value="">全部来源</button>
+                <button class="c-select__option c-select__option--active" type="button" data-value="">全部存放类型</button>
                 <button class="c-select__option" type="button" data-value="putaway">已上架次品区</button>
-                <button class="c-select__option" type="button" data-value="temporary">次品暂存区</button>
+                <button class="c-select__option" type="button" data-value="temporary">次品框归集</button>
               </div>
             </div>
           </label>
@@ -107,24 +107,28 @@
       </section>
 
       <section class="c-table-panel" data-component="DataTablePanel">
+        <div class="c-tabs c-tabs--panel" role="tablist" aria-label="次品处理池数据视图">
+          <button class="c-tabs__item c-tabs__item--active" data-pool-tab="pending" type="button" role="tab" aria-selected="true">待处理</button>
+          <button class="c-tabs__item" data-pool-tab="records" type="button" role="tab" aria-selected="false">已处理</button>
+        </div>
         <div class="c-table-panel__toolbar">
           <div class="c-table-panel__summary" data-role="table-summary">待处理聚合 <strong>4</strong> 组，待处理数量 <strong>105</strong> 件，采购成本合计 <strong>¥13,564.00</strong></div>
           <div class="c-table-panel__tools">
             <button class="btn btn--sm" type="button">导出当前结果</button>
           </div>
         </div>
-        <div class="c-table-scroll">
+        <div class="c-table-scroll" data-pool-panel="pending">
         <table class="c-table c-table--wide">
           <thead>
             <tr>
               <th>供应商</th>
               <th>SKU</th>
               <th>仓库</th>
-              <th>实物来源</th>
+              <th>次品存放类型</th>
               <th class="c-table__cell--num">待处理数量</th>
               <th class="c-table__cell--num">采购成本金额</th>
               <th>历史处理</th>
-              <th>最近处理方案</th>
+              <th>更新时间</th>
               <th class="c-table__cell--actions">操作</th>
             </tr>
           </thead>
@@ -137,18 +141,18 @@
               <td class="c-table__cell--num"><strong>46</strong></td>
               <td class="c-table__cell--num">¥3,128.00</td>
               <td><a class="link" data-action="open-history">3 次</a></td>
-              <td>返修入库 · 05-28</td>
+              <td>2026-05-28 16:40</td>
               <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
             </tr>
             <tr data-row="pending" data-source="temporary" data-defective-qty="14" data-total-cost="888" data-supplier="深圳启明电子" data-sku="SKU-BAT-8842" data-warehouse="华东一仓" data-history-count="3">
               <td>深圳启明电子</td>
               <td><a class="link" data-action="open-pending-detail">SKU-BAT-8842</a></td>
               <td>华东一仓</td>
-              <td><span class="tag tag--warning">次品暂存区</span></td>
+              <td><span class="tag tag--warning">次品框归集</span></td>
               <td class="c-table__cell--num"><strong>14</strong></td>
               <td class="c-table__cell--num">¥888.00</td>
               <td><a class="link" data-action="open-history">3 次</a></td>
-              <td>返修-退款 · 05-26</td>
+              <td>2026-05-26 10:18</td>
               <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
             </tr>
             <tr data-row="pending" data-source="putaway" data-defective-qty="14" data-total-cost="2520" data-supplier="杭州品越家居" data-sku="SKU-PAD-7710" data-warehouse="华东一仓" data-history-count="1">
@@ -159,7 +163,7 @@
               <td class="c-table__cell--num"><strong>14</strong></td>
               <td class="c-table__cell--num">¥2,520.00</td>
               <td><a class="link" data-action="open-history">1 次</a></td>
-              <td>报损 · 05-18</td>
+              <td>2026-05-18 09:40</td>
               <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
             </tr>
             <tr data-row="pending" data-source="putaway" data-defective-qty="31" data-total-cost="7028" data-supplier="宁波远拓工具" data-sku="SKU-TOOL-5571" data-warehouse="华北仓" data-history-count="0">
@@ -170,7 +174,7 @@
               <td class="c-table__cell--num"><strong>31</strong></td>
               <td class="c-table__cell--num">¥7,028.00</td>
               <td><a class="link" data-action="open-history">0 次</a></td>
-              <td>—</td>
+              <td>2026-05-17 11:26</td>
               <td class="c-table__cell--actions"><a class="link" data-action="open-plan">处理方案</a></td>
             </tr>
             <tr class="empty-row" data-role="empty-row" hidden>
@@ -180,6 +184,86 @@
             </tr>
           </tbody>
         </table>
+        </div>
+        <div class="c-table-scroll" data-pool-panel="records" hidden>
+          <table class="c-table c-table--wide">
+            <thead>
+              <tr>
+                <th>处置记录号</th>
+                <th>发起时间</th>
+                <th>供应商</th>
+                <th>SKU</th>
+                <th>仓库</th>
+                <th>次品存放类型</th>
+                <th>处置方案</th>
+                <th class="c-table__cell--num">处置数量</th>
+                <th>关联单据</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a class="link">DP260528001</a></td>
+                <td>2026-05-28 16:40</td>
+                <td>深圳启明电子</td>
+                <td>SKU-BAT-8842</td>
+                <td>华东一仓</td>
+                <td><span class="tag tag--processing">已上架次品区</span></td>
+                <td>返修 / 返修入库</td>
+                <td class="c-table__cell--num">30</td>
+                <td><a class="link">RX260528001</a></td>
+                <td><span class="tag tag--success">已完成</span></td>
+              </tr>
+              <tr>
+                <td><a class="link">DP260526009</a></td>
+                <td>2026-05-26 10:18</td>
+                <td>深圳启明电子</td>
+                <td>SKU-BAT-8842</td>
+                <td>华东一仓</td>
+                <td><span class="tag tag--warning">次品框归集</span></td>
+                <td>返修 / 返修换货</td>
+                <td class="c-table__cell--num">14</td>
+                <td><a class="link">RX260526009</a></td>
+                <td><span class="tag tag--processing">返修中</span></td>
+              </tr>
+              <tr>
+                <td><a class="link">DP260518016</a></td>
+                <td>2026-05-18 09:40</td>
+                <td>杭州品越家居</td>
+                <td>SKU-PAD-7710</td>
+                <td>华东一仓</td>
+                <td><span class="tag tag--processing">已上架次品区</span></td>
+                <td>报损</td>
+                <td class="c-table__cell--num">28</td>
+                <td><a class="link">BS260518016</a></td>
+                <td><span class="tag tag--success">已完成</span></td>
+              </tr>
+              <tr>
+                <td><a class="link">DP260517003</a></td>
+                <td>2026-05-17 11:26</td>
+                <td>宁波远拓工具</td>
+                <td>SKU-TOOL-5571</td>
+                <td>华北仓</td>
+                <td><span class="tag tag--processing">已上架次品区</span></td>
+                <td>返修 / 返修换货</td>
+                <td class="c-table__cell--num">26</td>
+                <td><a class="link">RX260517003</a></td>
+                <td><span class="tag tag--default">已取消</span></td>
+              </tr>
+              <tr>
+                <td><a class="link">DP260514002</a></td>
+                <td>2026-05-14 15:06</td>
+                <td>广州蓝森户外</td>
+                <td>SKU-CAMP-1208</td>
+                <td>华南二仓</td>
+                <td><span class="tag tag--warning">次品框归集</span></td>
+                <td>报损</td>
+                <td class="c-table__cell--num">18</td>
+                <td><a class="link">BS260514002</a></td>
+                <td><span class="tag tag--processing">审核中</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </main>
